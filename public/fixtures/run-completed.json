@@ -1,0 +1,1296 @@
+{
+  "runId": "r_completed_offline01",
+  "title": "Offline mode launch plan",
+  "task": "Plan the launch of offline mode for our field-notes app. Target: beta by end of Q1. The team is 4 engineers and 1 designer.",
+  "output": "work-plan",
+  "team": {
+    "name": "Mobile Product Squad",
+    "version": "v3"
+  },
+  "repo": {
+    "name": "example-org/field-notes-app",
+    "branch": "main"
+  },
+  "teamRef": {
+    "teamId": "squad",
+    "version": 3
+  },
+  "teamConfig": {
+    "teamId": "squad",
+    "name": "Mobile Product Squad",
+    "version": 3,
+    "versionLabel": "v3",
+    "note": "Turned off the Designer ↔ Engineer consult to save turns; Critic on Llama 3.3 70B",
+    "createdAt": "2026-11-24T08:40:00.000Z",
+    "coordinator": "PL",
+    "members": [
+      {
+        "role": "PL",
+        "personality": "Clear and decisive. Keeps scope tight.",
+        "responsibleFor": "Writes the brief, assigns sections, assembles the final document.",
+        "tools": [
+          "shared_draft",
+          "task_list"
+        ]
+      },
+      {
+        "role": "R",
+        "personality": "Evidence first. Always cites sources, and quotes the uploaded files when they answer the question.",
+        "responsibleFor": "Context, user needs, dependencies.",
+        "tools": [
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "D",
+        "personality": "User-centred. Thinks in flows.",
+        "responsibleFor": "Scope from the user's side, milestones that ship value.",
+        "tools": [
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "E",
+        "personality": "Pragmatic. Flags effort and risk early.",
+        "responsibleFor": "Timeline, technical risks, feasibility. Reads the code when a public GitHub repo is linked.",
+        "tools": [
+          "github_repo",
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "C",
+        "personality": "Strict but fair. Has no tools for making things.",
+        "responsibleFor": "Reviews every section against the brief.",
+        "tools": [
+          "comment"
+        ],
+        "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+      }
+    ],
+    "rules": [
+      {
+        "from": "PL",
+        "to": "*",
+        "what": "Assigns sections"
+      },
+      {
+        "from": "*",
+        "to": "PL",
+        "what": "Returns finished sections and open questions"
+      },
+      {
+        "from": "C",
+        "to": "*",
+        "what": "Approves or sends a section back"
+      },
+      {
+        "from": "*",
+        "to": "C",
+        "what": "Submits a section for review"
+      },
+      {
+        "from": "R",
+        "to": "D",
+        "what": "Consult: findings and user needs"
+      },
+      {
+        "from": "D",
+        "to": "R",
+        "what": "Consult: findings and user needs"
+      },
+      {
+        "from": "R",
+        "to": "E",
+        "what": "Consult: technical dependencies"
+      },
+      {
+        "from": "E",
+        "to": "R",
+        "what": "Consult: technical dependencies"
+      }
+    ],
+    "guardrails": {
+      "maxTurns": 60,
+      "maxTokens": 150000,
+      "criticRounds": 2,
+      "noProgressTurns": 5
+    }
+  },
+  "files": [
+    {
+      "fileId": "f_roadmap01",
+      "name": "field-notes-roadmap.pdf",
+      "mimeType": "application/pdf",
+      "bytes": 248312,
+      "chars": 12480,
+      "truncated": false,
+      "status": "ready",
+      "error": null,
+      "createdAt": "2026-11-24T09:11:20.000Z"
+    }
+  ],
+  "status": "completed",
+  "stopReason": null,
+  "brief": {
+    "goal": "Ship an offline mode beta of the field-notes app by the end of Q1, with sync that never loses a note.",
+    "audience": "The team's engineering and design leads.",
+    "assumptions": "4 engineers and 1 designer. The linked repository (example-org/field-notes-app, main) shows how sync works today.",
+    "outOfScope": "Pricing changes and tablet layouts.",
+    "doneWhen": "All 7 reviewed sections are approved by the Critic, and anything unresolved is listed under Open questions."
+  },
+  "guardrails": {
+    "maxTurns": 60,
+    "maxTokens": 150000,
+    "criticRounds": 2,
+    "noProgressTurns": 5
+  },
+  "sections": [
+    {
+      "id": "goal",
+      "name": "Goal",
+      "owner": "PL",
+      "consults": [],
+      "guidance": "One or two sentences: the outcome and the deadline.",
+      "status": "approved",
+      "rounds": 1,
+      "content": [
+        "Ship an offline mode beta of the field-notes app by the end of Q1.",
+        "Field users can capture and edit notes with no signal, and sync never loses a note."
+      ],
+      "consulted": [],
+      "sources": [
+        "Approved brief"
+      ],
+      "reviews": [],
+      "spanIds": [
+        7,
+        8
+      ],
+      "tokens": 3250
+    },
+    {
+      "id": "scope",
+      "name": "Scope and non-goals",
+      "owner": "D",
+      "consults": [
+        "R"
+      ],
+      "guidance": "What is in scope, and explicit non-goals.",
+      "status": "approved",
+      "rounds": 1,
+      "content": [
+        "In scope: create, edit and delete notes offline; queue photo attachments; sync on reconnect.",
+        "In scope: a clear offline indicator and a per-note sync status.",
+        "Non-goals: tablet layouts, pricing changes, offline search across shared notebooks."
+      ],
+      "consulted": [
+        "R"
+      ],
+      "sources": [
+        "Researcher's answer: field use with no signal",
+        "File: field-notes-roadmap.pdf (field research)",
+        "Approved brief: out of scope"
+      ],
+      "reviews": [],
+      "spanIds": [
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "tokens": 6550
+    },
+    {
+      "id": "milestones",
+      "name": "Milestones",
+      "owner": "D",
+      "consults": [
+        "E"
+      ],
+      "guidance": "3–5 milestones that each ship user value.",
+      "status": "approved",
+      "rounds": 1,
+      "content": [
+        "1 · Local storage layer: notes and photos are saved on the device first.",
+        "2 · Sync with per-field conflict merge, behind a feature flag.",
+        "3 · Offline indicator and sync status in the UI.",
+        "4 · Closed beta with [BETA GROUP SIZE] field users."
+      ],
+      "consulted": [],
+      "sources": [
+        "Approved brief",
+        "Scope and non-goals section"
+      ],
+      "reviews": [],
+      "spanIds": [
+        14,
+        15
+      ],
+      "tokens": 4640
+    },
+    {
+      "id": "owners",
+      "name": "Owners",
+      "owner": "PL",
+      "consults": [],
+      "guidance": "Who owns what. Use [PLACEHOLDER] names, never invent people.",
+      "status": "approved",
+      "rounds": 1,
+      "content": [
+        "Overall: [PRODUCT OWNER].",
+        "Sync and storage: [ENGINEERING LEAD].",
+        "Offline states and messaging: [DESIGNER].",
+        "Beta recruitment and feedback: [RESEARCH LEAD]."
+      ],
+      "consulted": [],
+      "sources": [
+        "Approved brief",
+        "Section owners from the section plan"
+      ],
+      "reviews": [],
+      "spanIds": [
+        31,
+        32
+      ],
+      "tokens": 3960
+    },
+    {
+      "id": "timeline",
+      "name": "Timeline",
+      "owner": "E",
+      "consults": [
+        "D"
+      ],
+      "guidance": "Phases with rough dates up to the deadline.",
+      "status": "approved",
+      "rounds": 1,
+      "content": [
+        "Weeks 1–3: local storage layer and migration of existing notes.",
+        "Weeks 4–7: sync and conflict merge, with a conflict test suite.",
+        "Weeks 8–9: offline UI states and internal dogfood.",
+        "Weeks 10–12: closed beta, fixes, go/no-go by end of Q1."
+      ],
+      "consulted": [],
+      "sources": [
+        "GitHub: repository tree and src/sync/",
+        "Milestones section"
+      ],
+      "reviews": [],
+      "spanIds": [
+        16,
+        17,
+        18
+      ],
+      "tokens": 5950
+    },
+    {
+      "id": "risks",
+      "name": "Risks",
+      "owner": "E",
+      "consults": [
+        "R"
+      ],
+      "guidance": "Top risks, each with a likelihood and a concrete mitigation.",
+      "status": "approved",
+      "rounds": 2,
+      "content": [
+        "Sync conflicts may overwrite edits made on two devices. Likelihood: high. Mitigation: merge per field, keep both versions when a merge fails, and pass a conflict test suite before beta.",
+        "Storage limits on older phones. Likelihood: medium. Mitigation: cap the photo cache and warn the user before it fills.",
+        "Scope creep into tablet layouts. Likelihood: low. Mitigation: listed as a non-goal; Product lead rejects tablet tickets until after beta."
+      ],
+      "consulted": [
+        "R"
+      ],
+      "sources": [
+        "GitHub: src/sync/ (last-write-wins, no merge)",
+        "Researcher's answer: field failure modes",
+        "Critic's note, round 1"
+      ],
+      "reviews": [
+        {
+          "round": 1,
+          "verdict": "sent_back",
+          "note": "Sync conflicts are named as the top risk but there is no mitigation, and no risk has a mitigation at all. The brief says sync must never lose a note.",
+          "before": [
+            "Sync conflicts may overwrite edits made on two devices. Likelihood: high.",
+            "Storage limits on older phones. Likelihood: medium.",
+            "Scope creep into tablet layouts. Likelihood: low."
+          ]
+        }
+      ],
+      "spanIds": [
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "tokens": 13470
+    },
+    {
+      "id": "deps",
+      "name": "Dependencies",
+      "owner": "R",
+      "consults": [
+        "E"
+      ],
+      "guidance": "Things that must happen or be decided first.",
+      "status": "approved",
+      "rounds": 1,
+      "content": [
+        "Choose the on-device database before the local storage work starts (the repo has no local store today).",
+        "Background sync permissions on iOS and Android.",
+        "The note ID format must become client-generated before offline creates can sync."
+      ],
+      "consulted": [
+        "E"
+      ],
+      "sources": [
+        "Engineer's answer: technical dependencies",
+        "File: field-notes-roadmap.pdf (platform constraints)",
+        "GitHub: package.json and src/storage/"
+      ],
+      "reviews": [],
+      "spanIds": [
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "tokens": 8340
+    },
+    {
+      "id": "open",
+      "name": "Open questions",
+      "owner": "PL",
+      "consults": [],
+      "guidance": "Questions raised during the run that no agent could answer. Not reviewed.",
+      "status": "open",
+      "rounds": 1,
+      "content": [
+        "Should conflicted notes show both versions to the user, or merge silently? (raised by Designer)",
+        "Do managed devices need admin controls over offline data? (raised by Researcher)"
+      ],
+      "consulted": [],
+      "sources": [
+        "Questions raised during the run that no agent could answer"
+      ],
+      "reviews": [],
+      "spanIds": [
+        33
+      ],
+      "tokens": 2090
+    }
+  ],
+  "openQuestions": [
+    {
+      "question": "Should conflicted notes show both versions to the user, or merge silently?",
+      "raisedBy": "D"
+    },
+    {
+      "question": "Do managed devices need admin controls over offline data?",
+      "raisedBy": "R"
+    }
+  ],
+  "spans": [
+    {
+      "id": 1,
+      "parentId": null,
+      "role": "PL",
+      "kind": "work",
+      "action": "Draft the brief",
+      "why": "A run starts with a brief the user approves before anything else happens.",
+      "status": "done",
+      "startMs": 0,
+      "durMs": 14200,
+      "depth": 0,
+      "sectionId": null,
+      "inputTokens": 1450,
+      "outputTokens": 380,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Task: Plan the launch of offline mode for our field-notes app. Target: beta by end of Q1. The team is 4 engineers and 1 designer.",
+      "output": "Brief with goal, audience, assumptions, out of scope and done-when.",
+      "gatewayLogId": "01JDQ007000GW00000",
+      "agent": "squad--PL",
+      "memoriesUsed": [
+        1
+      ]
+    },
+    {
+      "id": 2,
+      "parentId": 1,
+      "role": "PL",
+      "kind": "system",
+      "action": "Brief approved by you",
+      "why": "The run waits at the brief checkpoint until you approve it.",
+      "status": "done",
+      "startMs": 55200,
+      "durMs": 0,
+      "depth": 1,
+      "sectionId": null,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "Brief v1.",
+      "output": "Approved without edits.",
+      "gatewayLogId": null,
+      "agent": null
+    },
+    {
+      "id": 3,
+      "parentId": 2,
+      "role": "PL",
+      "kind": "work",
+      "action": "Split the brief into 8 section tasks",
+      "why": "Matched each section to the member whose role and tools fit it best, using the section plan.",
+      "status": "done",
+      "startMs": 55450,
+      "durMs": 9100,
+      "depth": 2,
+      "sectionId": null,
+      "inputTokens": 1900,
+      "outputTokens": 520,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Approved brief and section plan.",
+      "output": "8 section tasks, each with an owner and the roles they may consult.",
+      "gatewayLogId": "01JDQ007074GW00C7Y",
+      "agent": "squad--PL",
+      "memoriesUsed": []
+    },
+    {
+      "id": 4,
+      "parentId": 3,
+      "role": "PL",
+      "kind": "msg",
+      "action": "Assign Scope and Milestones to Designer",
+      "why": "Both sections are about what the user experiences, which is the Designer's job.",
+      "status": "done",
+      "startMs": 64800,
+      "durMs": 300,
+      "depth": 3,
+      "sectionId": null,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "Section tasks: Scope and non-goals, Milestones.",
+      "output": "Message delivered.",
+      "gatewayLogId": null,
+      "agent": null,
+      "delivered": {
+        "to": "D",
+        "kind": "assign"
+      }
+    },
+    {
+      "id": 5,
+      "parentId": 3,
+      "role": "PL",
+      "kind": "msg",
+      "action": "Assign Timeline and Risks to Engineer",
+      "why": "Timeline and Risks depend on the code, and only the Engineer can read the repository.",
+      "status": "done",
+      "startMs": 65350,
+      "durMs": 300,
+      "depth": 3,
+      "sectionId": null,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "Section tasks: Timeline, Risks.",
+      "output": "Message delivered.",
+      "gatewayLogId": null,
+      "agent": null,
+      "delivered": {
+        "to": "E",
+        "kind": "assign"
+      }
+    },
+    {
+      "id": 6,
+      "parentId": 3,
+      "role": "PL",
+      "kind": "msg",
+      "action": "Assign Dependencies to Researcher",
+      "why": "Dependencies is about what must be decided first; the Researcher collects that evidence.",
+      "status": "done",
+      "startMs": 65900,
+      "durMs": 300,
+      "depth": 3,
+      "sectionId": null,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "Section task: Dependencies.",
+      "output": "Message delivered.",
+      "gatewayLogId": null,
+      "agent": null,
+      "delivered": {
+        "to": "R",
+        "kind": "assign"
+      }
+    },
+    {
+      "id": 7,
+      "parentId": 3,
+      "role": "PL",
+      "kind": "work",
+      "action": "Draft Goal",
+      "why": "Goal is mine: one or two sentences with the outcome and the deadline from the brief.",
+      "status": "done",
+      "startMs": 66450,
+      "durMs": 7400,
+      "depth": 3,
+      "sectionId": "goal",
+      "inputTokens": 1600,
+      "outputTokens": 210,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Brief: goal and done-when.",
+      "output": "Ship an offline mode beta of the field-notes app by the end of Q1.\nField users can capture and edit notes with no signal, and sync never loses a note.",
+      "gatewayLogId": "01JDQ007222GW010NU",
+      "agent": "squad--PL",
+      "memoriesUsed": []
+    },
+    {
+      "id": 8,
+      "parentId": 7,
+      "role": "C",
+      "kind": "review",
+      "action": "Review Goal",
+      "why": "Checked against the brief: outcome and deadline both match.",
+      "status": "approved",
+      "startMs": 74100,
+      "durMs": 5200,
+      "depth": 4,
+      "sectionId": "goal",
+      "inputTokens": 1300,
+      "outputTokens": 140,
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "input": "Goal section, version 1.",
+      "output": "Approved, no changes.",
+      "gatewayLogId": "01JDQ007259GW016RT",
+      "agent": "squad--C",
+      "memoriesUsed": []
+    },
+    {
+      "id": 9,
+      "parentId": 4,
+      "role": "D",
+      "kind": "msg",
+      "action": "Ask Researcher: what do field users need with no signal?",
+      "why": "Scope should start from real field use. The handoff rules let me consult the Researcher.",
+      "status": "done",
+      "startMs": 79550,
+      "durMs": 400,
+      "depth": 4,
+      "sectionId": "scope",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "Question for Researcher.",
+      "output": "Question delivered.",
+      "gatewayLogId": null,
+      "agent": null,
+      "delivered": {
+        "to": "R",
+        "kind": "question"
+      }
+    },
+    {
+      "id": 10,
+      "parentId": 9,
+      "role": "R",
+      "kind": "tool",
+      "action": "Read field-notes-roadmap.pdf",
+      "why": "The Designer asked about field use; the uploaded roadmap has a field research section.",
+      "status": "done",
+      "startMs": 80200,
+      "durMs": 1100,
+      "depth": 5,
+      "sectionId": "scope",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "field-notes-roadmap.pdf (12,480 chars of Markdown)",
+      "output": "Found 'Field research': 68% of note sessions start with no signal; median offline stretch 3 h 40 min; losing a note is the top complaint in 41 of 52 interviews.",
+      "gatewayLogId": null,
+      "agent": null
+    },
+    {
+      "id": 11,
+      "parentId": 9,
+      "role": "R",
+      "kind": "work",
+      "action": "Answer Designer: field use with no signal",
+      "why": "Answered from the uploaded roadmap's field research section.",
+      "status": "done",
+      "startMs": 81550,
+      "durMs": 8800,
+      "depth": 5,
+      "sectionId": "scope",
+      "inputTokens": 1700,
+      "outputTokens": 450,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Designer's question and the brief.",
+      "output": "68% of sessions start with no signal and last hours offline (field-notes-roadmap.pdf). Users capture short notes and photos in bursts, then sync at the end of the day. Losing a note is the top complaint.",
+      "gatewayLogId": "01JDQ007370GW01P3Q",
+      "agent": "squad--R",
+      "memoriesUsed": [
+        1
+      ]
+    },
+    {
+      "id": 12,
+      "parentId": 4,
+      "role": "D",
+      "kind": "work",
+      "action": "Draft Scope and non-goals",
+      "why": "Framed scope around what a field user needs with no signal, using the Researcher's answer.",
+      "status": "done",
+      "startMs": 90600,
+      "durMs": 15600,
+      "depth": 4,
+      "sectionId": "scope",
+      "inputTokens": 2100,
+      "outputTokens": 640,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Brief and Researcher's answer.",
+      "output": "In scope: create, edit and delete notes offline; queue photo attachments; sync on reconnect.\nIn scope: a clear offline indicator and a per-note sync status.\nNon-goals: tablet layouts, pricing changes, offline search across shared notebooks.",
+      "gatewayLogId": "01JDQ007407GW01V7P",
+      "agent": "squad--D",
+      "memoriesUsed": []
+    },
+    {
+      "id": 13,
+      "parentId": 12,
+      "role": "C",
+      "kind": "review",
+      "action": "Review Scope and non-goals",
+      "why": "Checked against the brief: out-of-scope items and audience match.",
+      "status": "approved",
+      "startMs": 106450,
+      "durMs": 6100,
+      "depth": 5,
+      "sectionId": "scope",
+      "inputTokens": 1500,
+      "outputTokens": 160,
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "input": "Scope section, version 1.",
+      "output": "Approved, no changes.",
+      "gatewayLogId": "01JDQ007444GW021BO",
+      "agent": "squad--C",
+      "memoriesUsed": []
+    },
+    {
+      "id": 14,
+      "parentId": 4,
+      "role": "D",
+      "kind": "work",
+      "action": "Draft Milestones",
+      "why": "Designer ↔ Engineer consults are off in this team version, so the milestones follow the brief and the scope section.",
+      "status": "done",
+      "startMs": 112800,
+      "durMs": 14800,
+      "depth": 4,
+      "sectionId": "milestones",
+      "inputTokens": 2300,
+      "outputTokens": 590,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Brief and the scope section.",
+      "output": "1 · Local storage layer: notes and photos are saved on the device first.\n2 · Sync with per-field conflict merge, behind a feature flag.\n3 · Offline indicator and sync status in the UI.\n4 · Closed beta with [BETA GROUP SIZE] field users.",
+      "gatewayLogId": "01JDQ007481GW027FN",
+      "agent": "squad--D",
+      "memoriesUsed": [
+        1
+      ]
+    },
+    {
+      "id": 15,
+      "parentId": 14,
+      "role": "C",
+      "kind": "review",
+      "action": "Review Milestones",
+      "why": "4 milestones, each ships user value, and the beta lands inside Q1.",
+      "status": "approved",
+      "startMs": 127850,
+      "durMs": 6000,
+      "depth": 5,
+      "sectionId": "milestones",
+      "inputTokens": 1600,
+      "outputTokens": 150,
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "input": "Milestones section, version 1.",
+      "output": "Approved, no changes.",
+      "gatewayLogId": "01JDQ007518GW02DJM",
+      "agent": "squad--C",
+      "memoriesUsed": []
+    },
+    {
+      "id": 16,
+      "parentId": 5,
+      "role": "E",
+      "kind": "tool",
+      "action": "GitHub: read src/sync/ on main",
+      "why": "Needed to see how sync handles conflicts today before placing the phases.",
+      "status": "done",
+      "startMs": 134100,
+      "durMs": 3400,
+      "depth": 4,
+      "sectionId": "timeline",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "example-org/field-notes-app @ main, src/sync/",
+      "output": "4 files. sync.ts uses last-write-wins on the whole note; no merge logic; note IDs are assigned by the server.",
+      "gatewayLogId": null,
+      "agent": null
+    },
+    {
+      "id": 17,
+      "parentId": 5,
+      "role": "E",
+      "kind": "work",
+      "action": "Draft Timeline",
+      "why": "Placed 4 phases before the deadline from the repository findings. Designer consults are off in this team version.",
+      "status": "done",
+      "startMs": 137750,
+      "durMs": 17900,
+      "depth": 4,
+      "sectionId": "timeline",
+      "inputTokens": 3400,
+      "outputTokens": 700,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Brief, milestones, repository notes.",
+      "output": "Weeks 1–3: local storage layer and migration of existing notes.\nWeeks 4–7: sync and conflict merge, with a conflict test suite.\nWeeks 8–9: offline UI states and internal dogfood.\nWeeks 10–12: closed beta, fixes, go/no-go by end of Q1.",
+      "gatewayLogId": "01JDQ007592GW02PRK",
+      "agent": "squad--E",
+      "memoriesUsed": [
+        1
+      ]
+    },
+    {
+      "id": 18,
+      "parentId": 17,
+      "role": "C",
+      "kind": "review",
+      "action": "Review Timeline",
+      "why": "Phases cover every milestone and end before the Q1 deadline.",
+      "status": "approved",
+      "startMs": 155900,
+      "durMs": 5900,
+      "depth": 5,
+      "sectionId": "timeline",
+      "inputTokens": 1700,
+      "outputTokens": 150,
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "input": "Timeline section, version 1.",
+      "output": "Approved, no changes.",
+      "gatewayLogId": "01JDQ007629GW02VVJ",
+      "agent": "squad--C",
+      "memoriesUsed": []
+    },
+    {
+      "id": 19,
+      "parentId": 5,
+      "role": "E",
+      "kind": "msg",
+      "action": "Ask Researcher: what breaks offline in field conditions?",
+      "why": "Risks should include field failure modes, not only code risks. Engineer ↔ Researcher consults are allowed.",
+      "status": "done",
+      "startMs": 162050,
+      "durMs": 400,
+      "depth": 4,
+      "sectionId": "risks",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "Question for Researcher.",
+      "output": "Question delivered.",
+      "gatewayLogId": null,
+      "agent": null,
+      "delivered": {
+        "to": "R",
+        "kind": "question"
+      }
+    },
+    {
+      "id": 20,
+      "parentId": 19,
+      "role": "R",
+      "kind": "work",
+      "action": "Answer Engineer: field failure modes",
+      "why": "Listed the failure modes that matter most for long offline sessions.",
+      "status": "done",
+      "startMs": 162700,
+      "durMs": 9300,
+      "depth": 5,
+      "sectionId": "risks",
+      "inputTokens": 1600,
+      "outputTokens": 380,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Engineer's question.",
+      "output": "Two devices editing the same note, phones running out of storage from photos, and the OS killing background sync.",
+      "gatewayLogId": "01JDQ007703GW0383H",
+      "agent": "squad--R",
+      "memoriesUsed": []
+    },
+    {
+      "id": 21,
+      "parentId": 5,
+      "role": "E",
+      "kind": "work",
+      "action": "Draft Risks",
+      "why": "Built on the conflict findings from the repository and the Researcher's answer.",
+      "status": "done",
+      "startMs": 172250,
+      "durMs": 15800,
+      "depth": 4,
+      "sectionId": "risks",
+      "inputTokens": 2900,
+      "outputTokens": 520,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Repository notes, timeline, Researcher's answer.",
+      "output": "Sync conflicts may overwrite edits made on two devices. Likelihood: high.\nStorage limits on older phones. Likelihood: medium.\nScope creep into tablet layouts. Likelihood: low.",
+      "gatewayLogId": "01JDQ007740GW03E7G",
+      "agent": "squad--E",
+      "memoriesUsed": []
+    },
+    {
+      "id": 22,
+      "parentId": 21,
+      "role": "C",
+      "kind": "review",
+      "action": "Review Risks",
+      "why": "The section names sync conflicts as the top risk but gives no mitigation. The brief says sync must never lose a note.",
+      "status": "sent_back",
+      "startMs": 188300,
+      "durMs": 6800,
+      "depth": 5,
+      "sectionId": "risks",
+      "inputTokens": 1800,
+      "outputTokens": 210,
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "input": "Risks section, version 1.",
+      "output": "Sent back to Engineer: Sync conflicts are named as the top risk but there is no mitigation, and no risk has a mitigation at all. The brief says sync must never lose a note.",
+      "gatewayLogId": "01JDQ007777GW03KBF",
+      "agent": "squad--C",
+      "memoriesUsed": [
+        1
+      ]
+    },
+    {
+      "id": 23,
+      "parentId": 22,
+      "role": "E",
+      "kind": "work",
+      "action": "Revise Risks (round 2)",
+      "why": "Responding to the Critic: added a mitigation to every risk, starting with a per-field merge for conflicts.",
+      "status": "done",
+      "startMs": 195350,
+      "durMs": 17200,
+      "depth": 6,
+      "sectionId": "risks",
+      "inputTokens": 3300,
+      "outputTokens": 610,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Critic's note and Risks version 1.",
+      "output": "Sync conflicts may overwrite edits made on two devices. Likelihood: high. Mitigation: merge per field, keep both versions when a merge fails, and pass a conflict test suite before beta.\nStorage limits on older phones. Likelihood: medium. Mitigation: cap the photo cache and warn the user before it fills.\nScope creep into tablet layouts. Likelihood: low. Mitigation: listed as a non-goal; Product lead rejects tablet tickets until after beta.",
+      "gatewayLogId": "01JDQ007814GW03QFE",
+      "agent": "squad--E",
+      "memoriesUsed": []
+    },
+    {
+      "id": 24,
+      "parentId": 23,
+      "role": "C",
+      "kind": "review",
+      "action": "Review Risks (round 2)",
+      "why": "Every risk now has a likelihood and a concrete mitigation; the conflict mitigation protects every note.",
+      "status": "approved",
+      "startMs": 212800,
+      "durMs": 6300,
+      "depth": 7,
+      "sectionId": "risks",
+      "inputTokens": 2000,
+      "outputTokens": 150,
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "input": "Risks section, version 2.",
+      "output": "Approved.",
+      "gatewayLogId": "01JDQ007851GW03WJD",
+      "agent": "squad--C",
+      "memoriesUsed": [
+        1
+      ]
+    },
+    {
+      "id": 25,
+      "parentId": 6,
+      "role": "R",
+      "kind": "msg",
+      "action": "Ask Engineer: what must land before sync work?",
+      "why": "Dependencies are technical here. Researcher ↔ Engineer consults are allowed.",
+      "status": "done",
+      "startMs": 219350,
+      "durMs": 400,
+      "depth": 4,
+      "sectionId": "deps",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "Question for Engineer.",
+      "output": "Question delivered.",
+      "gatewayLogId": null,
+      "agent": null,
+      "delivered": {
+        "to": "E",
+        "kind": "question"
+      }
+    },
+    {
+      "id": 26,
+      "parentId": 25,
+      "role": "E",
+      "kind": "tool",
+      "action": "GitHub: read package.json and src/storage/",
+      "why": "Checked whether a local database or client-side IDs already exist.",
+      "status": "done",
+      "startMs": 220000,
+      "durMs": 2900,
+      "depth": 5,
+      "sectionId": "deps",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "example-org/field-notes-app @ main: package.json, src/storage/",
+      "output": "No local database dependency. src/storage/ only caches the last 20 notes in memory. IDs come from the API.",
+      "gatewayLogId": null,
+      "agent": null
+    },
+    {
+      "id": 27,
+      "parentId": 25,
+      "role": "E",
+      "kind": "work",
+      "action": "Answer Researcher: technical dependencies",
+      "why": "Turned the repository findings into decisions that block local storage and sync.",
+      "status": "done",
+      "startMs": 223150,
+      "durMs": 8900,
+      "depth": 5,
+      "sectionId": "deps",
+      "inputTokens": 3500,
+      "outputTokens": 330,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Researcher's question and repository notes.",
+      "output": "Pick an on-device database first; move to client-generated note IDs; confirm background sync permissions on both platforms.",
+      "gatewayLogId": "01JDQ007962GW04EVA",
+      "agent": "squad--E",
+      "memoriesUsed": []
+    },
+    {
+      "id": 28,
+      "parentId": 6,
+      "role": "R",
+      "kind": "tool",
+      "action": "Read field-notes-roadmap.pdf",
+      "why": "The roadmap lists platform constraints that decide what must happen first.",
+      "status": "done",
+      "startMs": 232300,
+      "durMs": 900,
+      "depth": 4,
+      "sectionId": "deps",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "field-notes-roadmap.pdf, section 'Platform constraints'",
+      "output": "iOS background sync is limited to ~30 s windows; Android 14 needs a foreground service for long uploads.",
+      "gatewayLogId": null,
+      "agent": null
+    },
+    {
+      "id": 29,
+      "parentId": 6,
+      "role": "R",
+      "kind": "work",
+      "action": "Draft Dependencies",
+      "why": "Combined the Engineer's answer with what the milestones need first.",
+      "status": "done",
+      "startMs": 233450,
+      "durMs": 14600,
+      "depth": 4,
+      "sectionId": "deps",
+      "inputTokens": 2400,
+      "outputTokens": 470,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Engineer's answer, milestones and the uploaded roadmap.",
+      "output": "Choose the on-device database before the local storage work starts (the repo has no local store today).\nBackground sync permissions on iOS and Android.\nThe note ID format must become client-generated before offline creates can sync.",
+      "gatewayLogId": "01JDQ008036GW04R38",
+      "agent": "squad--R",
+      "memoriesUsed": []
+    },
+    {
+      "id": 30,
+      "parentId": 29,
+      "role": "C",
+      "kind": "review",
+      "action": "Review Dependencies",
+      "why": "Each dependency is concrete and tied to a milestone.",
+      "status": "approved",
+      "startMs": 248300,
+      "durMs": 5700,
+      "depth": 5,
+      "sectionId": "deps",
+      "inputTokens": 1500,
+      "outputTokens": 140,
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "input": "Dependencies section, version 1.",
+      "output": "Approved, no changes.",
+      "gatewayLogId": "01JDQ008073GW04X77",
+      "agent": "squad--C",
+      "memoriesUsed": []
+    },
+    {
+      "id": 31,
+      "parentId": 3,
+      "role": "PL",
+      "kind": "work",
+      "action": "Draft Owners",
+      "why": "Owners follow the section plan; names stay as placeholders as the guidance requires.",
+      "status": "done",
+      "startMs": 254250,
+      "durMs": 7900,
+      "depth": 3,
+      "sectionId": "owners",
+      "inputTokens": 2200,
+      "outputTokens": 230,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Section plan and drafted sections.",
+      "output": "Overall: [PRODUCT OWNER].\nSync and storage: [ENGINEERING LEAD].\nOffline states and messaging: [DESIGNER].\nBeta recruitment and feedback: [RESEARCH LEAD].",
+      "gatewayLogId": "01JDQ008110GW053B6",
+      "agent": "squad--PL",
+      "memoriesUsed": []
+    },
+    {
+      "id": 32,
+      "parentId": 31,
+      "role": "C",
+      "kind": "review",
+      "action": "Review Owners",
+      "why": "Every area has an owner and no real names were invented.",
+      "status": "approved",
+      "startMs": 262400,
+      "durMs": 5100,
+      "depth": 4,
+      "sectionId": "owners",
+      "inputTokens": 1400,
+      "outputTokens": 130,
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "input": "Owners section, version 1.",
+      "output": "Approved, no changes.",
+      "gatewayLogId": "01JDQ008147GW059F5",
+      "agent": "squad--C",
+      "memoriesUsed": []
+    },
+    {
+      "id": 33,
+      "parentId": 3,
+      "role": "PL",
+      "kind": "work",
+      "action": "Collect open questions",
+      "why": "Two questions came up that no agent could answer; they go to Open questions instead of being guessed.",
+      "status": "done",
+      "startMs": 267750,
+      "durMs": 6200,
+      "depth": 3,
+      "sectionId": "open",
+      "inputTokens": 1900,
+      "outputTokens": 190,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Questions raised during the run.",
+      "output": "Should conflicted notes show both versions to the user, or merge silently? (raised by Designer)\nDo managed devices need admin controls over offline data? (raised by Researcher)",
+      "gatewayLogId": "01JDQ008184GW05FJ4",
+      "agent": "squad--PL",
+      "memoriesUsed": []
+    },
+    {
+      "id": 34,
+      "parentId": 3,
+      "role": "PL",
+      "kind": "work",
+      "action": "Assemble the work plan",
+      "why": "All reviewed sections are approved, so the document can be assembled.",
+      "status": "done",
+      "startMs": 274200,
+      "durMs": 5400,
+      "depth": 3,
+      "sectionId": null,
+      "inputTokens": 4100,
+      "outputTokens": 260,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "8 sections.",
+      "output": "Work plan assembled: 8 sections, 2 open questions.",
+      "gatewayLogId": "01JDQ008221GW05LN3",
+      "agent": "squad--PL",
+      "memoriesUsed": []
+    },
+    {
+      "id": 35,
+      "parentId": 34,
+      "role": "PL",
+      "kind": "system",
+      "action": "Collect lessons",
+      "why": "Every member that worked reflects once at the end, so the next run of this team starts from what this one learned.",
+      "status": "done",
+      "startMs": 279850,
+      "durMs": 200,
+      "depth": 4,
+      "sectionId": null,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": null,
+      "input": "Members that worked: PL, R, D, E, C.",
+      "output": "Asked 5 agents to reflect. Outcomes and the Critic's notes were stored as each section was approved or sent back.",
+      "gatewayLogId": null,
+      "agent": null
+    },
+    {
+      "id": 36,
+      "parentId": 35,
+      "role": "PL",
+      "kind": "work",
+      "action": "Reflect on the run",
+      "why": "The run ended, so I kept at most two things worth remembering for this team's next runs.",
+      "status": "done",
+      "startMs": 280300,
+      "durMs": 3600,
+      "depth": 5,
+      "sectionId": null,
+      "inputTokens": 880,
+      "outputTokens": 110,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "My turns in this run, the Critic's notes on my sections and what I already remember (newest 20 memories).",
+      "output": "{\n \"items\": [\n  {\n   \"kind\": \"note\",\n   \"text\": \"Owners stay as [PLACEHOLDER] names; the Critic approves them first time when every area has one.\"\n  }\n ]\n}",
+      "gatewayLogId": "01JDQ008295GW05XV1",
+      "agent": "squad--PL",
+      "memoriesUsed": [
+        1
+      ]
+    },
+    {
+      "id": 37,
+      "parentId": 35,
+      "role": "R",
+      "kind": "work",
+      "action": "Reflect on the run",
+      "why": "The run ended, so I kept at most two things worth remembering for this team's next runs.",
+      "status": "done",
+      "startMs": 284150,
+      "durMs": 3900,
+      "depth": 5,
+      "sectionId": null,
+      "inputTokens": 920,
+      "outputTokens": 110,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "My turns in this run, the Critic's notes on my sections and what I already remember (newest 20 memories).",
+      "output": "{\n \"items\": [\n  {\n   \"kind\": \"note\",\n   \"text\": \"The uploaded roadmap's field research section answers most user-need questions; read it before answering.\"\n  }\n ]\n}",
+      "gatewayLogId": "01JDQ008332GW063Z0",
+      "agent": "squad--R",
+      "memoriesUsed": [
+        1
+      ]
+    },
+    {
+      "id": 38,
+      "parentId": 35,
+      "role": "D",
+      "kind": "work",
+      "action": "Reflect on the run",
+      "why": "The run ended, so I kept at most two things worth remembering for this team's next runs.",
+      "status": "done",
+      "startMs": 288300,
+      "durMs": 4200,
+      "depth": 5,
+      "sectionId": null,
+      "inputTokens": 960,
+      "outputTokens": 110,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "My turns in this run, the Critic's notes on my sections and what I already remember (newest 20 memories).",
+      "output": "{\n \"items\": [\n  {\n   \"kind\": \"lesson\",\n   \"text\": \"When the Engineer consult is off, base milestones on the scope section and the brief's deadline.\"\n  }\n ]\n}",
+      "gatewayLogId": "01JDQ008369GW06A2Z",
+      "agent": "squad--D",
+      "memoriesUsed": [
+        1
+      ]
+    },
+    {
+      "id": 39,
+      "parentId": 35,
+      "role": "E",
+      "kind": "work",
+      "action": "Reflect on the run",
+      "why": "The run ended, so I kept at most two things worth remembering for this team's next runs.",
+      "status": "done",
+      "startMs": 292750,
+      "durMs": 4500,
+      "depth": 5,
+      "sectionId": null,
+      "inputTokens": 1000,
+      "outputTokens": 110,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "My turns in this run, the Critic's notes on my sections and what I already remember (newest 20 memories).",
+      "output": "{\n \"items\": [\n  {\n   \"kind\": \"lesson\",\n   \"text\": \"Write a concrete mitigation next to every risk in the first draft; the Critic sends back risks without one.\"\n  },\n  {\n   \"kind\": \"note\",\n   \"text\": \"The repo's sync uses last-write-wins and server-assigned note IDs.\"\n  }\n ]\n}",
+      "gatewayLogId": "01JDQ008406GW06G6Y",
+      "agent": "squad--E",
+      "memoriesUsed": [
+        1
+      ]
+    },
+    {
+      "id": 40,
+      "parentId": 35,
+      "role": "C",
+      "kind": "work",
+      "action": "Reflect on the run",
+      "why": "The run ended, so I kept at most two things worth remembering for this team's next runs.",
+      "status": "done",
+      "startMs": 297500,
+      "durMs": 4800,
+      "depth": 5,
+      "sectionId": null,
+      "inputTokens": 1040,
+      "outputTokens": 110,
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "input": "My turns in this run, the Critic's notes on my sections and what I already remember (newest 20 memories).",
+      "output": "{\n \"items\": [\n  {\n   \"kind\": \"lesson\",\n   \"text\": \"For offline sync plans, the conflict risk needs a mitigation that protects every note.\"\n  }\n ]\n}",
+      "gatewayLogId": "01JDQ008443GW06MAX",
+      "agent": "squad--C",
+      "memoriesUsed": [
+        1
+      ]
+    }
+  ],
+  "totals": {
+    "turns": 28,
+    "inputTokens": 53950,
+    "outputTokens": 8260,
+    "sectionsApproved": 7,
+    "reviewRoundsUsed": 1
+  },
+  "activeRole": null,
+  "createdAt": "2026-11-24T09:12:00.000Z",
+  "startedAt": "2026-11-24T09:12:55.200Z",
+  "endedAt": "2026-11-24T09:17:02.600Z",
+  "memberAgents": {
+    "PL": "squad--PL",
+    "R": "squad--R",
+    "D": "squad--D",
+    "E": "squad--E",
+    "C": "squad--C"
+  }
+}

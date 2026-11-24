@@ -1,0 +1,316 @@
+{
+  "runId": "r_labawaiting_onboard01",
+  "title": "Onboarding checklist experiment",
+  "task": "Design an experiment to test whether an onboarding checklist increases week-1 retention of our note-taking app.",
+  "output": "lab-experiment",
+  "team": {
+    "name": "UX Research Team",
+    "version": "v2"
+  },
+  "repo": null,
+  "teamRef": {
+    "teamId": "ux-research",
+    "version": 2
+  },
+  "teamConfig": {
+    "teamId": "ux-research",
+    "name": "UX Research Team",
+    "version": 2,
+    "versionLabel": "v2",
+    "note": "Data analyst always uses the calculator; Data analyst ↔ Ethics reviewer consult off",
+    "createdAt": "2026-11-23T16:20:00.000Z",
+    "templateId": "research-lab",
+    "outputId": "lab-experiment",
+    "coordinator": "PI",
+    "members": [
+      {
+        "role": "PI",
+        "personality": "Rigorous and focused. States the question before the method.",
+        "responsibleFor": "Writes the brief, owns the hypothesis, assembles the experiment design.",
+        "tools": [
+          "shared_draft",
+          "task_list"
+        ]
+      },
+      {
+        "role": "MS",
+        "personality": "Precise. Prefers the simplest design that answers the question.",
+        "responsibleFor": "Variables, method, sample and controls.",
+        "tools": [
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "DA",
+        "personality": "Quantitative and sceptical. Always runs the sample-size calculator before quoting a number of participants.",
+        "responsibleFor": "Measurements, analysis plan, sample size.",
+        "tools": [
+          "sample_size",
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "ER",
+        "personality": "Protective of participants. Asks who could be harmed and how consent works.",
+        "responsibleFor": "Risks and ethics: consent, privacy, harm, data handling.",
+        "tools": [
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "C",
+        "personality": "Strict but fair. Has no tools for making things.",
+        "responsibleFor": "Reviews every section against the brief.",
+        "tools": [
+          "comment"
+        ]
+      }
+    ],
+    "rules": [
+      {
+        "from": "PI",
+        "to": "*",
+        "what": "Assigns sections"
+      },
+      {
+        "from": "*",
+        "to": "PI",
+        "what": "Returns finished sections and open questions"
+      },
+      {
+        "from": "C",
+        "to": "*",
+        "what": "Approves or sends a section back"
+      },
+      {
+        "from": "*",
+        "to": "C",
+        "what": "Submits a section for review"
+      },
+      {
+        "from": "MS",
+        "to": "DA",
+        "what": "Consult: measurement and sample size"
+      },
+      {
+        "from": "DA",
+        "to": "MS",
+        "what": "Consult: measurement and sample size"
+      },
+      {
+        "from": "MS",
+        "to": "ER",
+        "what": "Consult: participant risk in the procedure"
+      },
+      {
+        "from": "ER",
+        "to": "MS",
+        "what": "Consult: participant risk in the procedure"
+      }
+    ],
+    "guardrails": {
+      "maxTurns": 60,
+      "maxTokens": 120000,
+      "criticRounds": 2,
+      "noProgressTurns": 5
+    }
+  },
+  "files": [
+    {
+      "fileId": "f_onbinterviews01",
+      "name": "onboarding-interviews.md",
+      "mimeType": "text/markdown",
+      "bytes": 18904,
+      "chars": 18311,
+      "truncated": false,
+      "status": "ready",
+      "error": null,
+      "createdAt": "2026-11-24T09:11:30.000Z"
+    }
+  ],
+  "status": "awaiting_approval",
+  "stopReason": null,
+  "brief": {
+    "goal": "Design a randomised experiment that shows whether an onboarding checklist increases week-1 retention of the note-taking app.",
+    "audience": "The product and data leads who decide whether to ship the checklist.",
+    "assumptions": "Week-1 retention is about 30% today. The checklist is built and behind a feature flag. Enough new users sign up each week to fill both groups within a few weeks ([WEEKLY SIGN-UPS]).",
+    "outOfScope": "Redesigning the onboarding screens; changes to paid acquisition.",
+    "doneWhen": "All 7 reviewed sections are approved by the Critic, and anything unresolved is listed under Open questions."
+  },
+  "guardrails": {
+    "maxTurns": 60,
+    "maxTokens": 120000,
+    "criticRounds": 2,
+    "noProgressTurns": 5
+  },
+  "sections": [
+    {
+      "id": "hypothesis",
+      "name": "Hypothesis",
+      "owner": "PI",
+      "consults": [],
+      "guidance": "One testable hypothesis with a direction and a null hypothesis.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "variables",
+      "name": "Variables",
+      "owner": "MS",
+      "consults": [
+        "DA"
+      ],
+      "guidance": "Independent, dependent and controlled variables, each with how it is operationalised.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "method",
+      "name": "Method",
+      "owner": "MS",
+      "consults": [
+        "ER"
+      ],
+      "guidance": "Design (e.g. randomised A/B, within-subjects), procedure step by step, duration.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "sample",
+      "name": "Sample and controls",
+      "owner": "MS",
+      "consults": [
+        "DA"
+      ],
+      "guidance": "Who takes part, how they are recruited and assigned, the control condition, and the sample size with its justification.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "measurements",
+      "name": "Measurements",
+      "owner": "DA",
+      "consults": [
+        "MS"
+      ],
+      "guidance": "Each metric with its exact definition, unit, time window and data source.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "analysis",
+      "name": "Analysis plan",
+      "owner": "DA",
+      "consults": [
+        "MS"
+      ],
+      "guidance": "Primary test, significance level, power, how missing data and multiple comparisons are handled, and the decision rule.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "ethics",
+      "name": "Risks and ethics",
+      "owner": "ER",
+      "consults": [
+        "MS"
+      ],
+      "guidance": "Consent, privacy and data retention, possible harms and how they are mitigated, and stop conditions.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "open",
+      "name": "Open questions",
+      "owner": "PI",
+      "consults": [],
+      "guidance": "Questions raised during the run that no agent could answer. Not reviewed.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    }
+  ],
+  "openQuestions": [],
+  "spans": [
+    {
+      "id": 1,
+      "parentId": null,
+      "role": "PI",
+      "kind": "work",
+      "action": "Draft the brief",
+      "why": "A run starts with a brief the user approves before anything else happens.",
+      "status": "done",
+      "startMs": 0,
+      "durMs": 13600,
+      "depth": 0,
+      "sectionId": null,
+      "inputTokens": 1520,
+      "outputTokens": 400,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Task: Design an experiment to test whether an onboarding checklist increases week-1 retention of our note-taking app.",
+      "output": "Brief with goal, audience, assumptions, out of scope and done-when.",
+      "gatewayLogId": "01JDQ007000GW00000"
+    }
+  ],
+  "totals": {
+    "turns": 1,
+    "inputTokens": 1520,
+    "outputTokens": 400,
+    "sectionsApproved": 0,
+    "reviewRoundsUsed": 0
+  },
+  "activeRole": null,
+  "createdAt": "2026-11-24T09:12:00.000Z",
+  "startedAt": null,
+  "endedAt": null
+}

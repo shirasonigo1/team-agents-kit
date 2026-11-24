@@ -1,0 +1,70 @@
+{
+  "agentName": "ux-research--PI",
+  "teamId": "ux-research",
+  "role": "PI",
+  "stats": {
+    "runs": 2,
+    "turns": 12,
+    "inputTokens": 23460,
+    "outputTokens": 3340,
+    "lastActiveAt": "2026-11-24T11:44:00.350Z"
+  },
+  "memories": [
+    {
+      "id": 4,
+      "kind": "note",
+      "text": "Re-running a design with the same brief takes about 30% fewer turns once members remember the last review.",
+      "runId": "r_labsecond_onboard02",
+      "teamVersion": 2,
+      "sectionId": null,
+      "createdAt": "2026-11-24T11:44:00.350Z"
+    },
+    {
+      "id": 3,
+      "kind": "outcome",
+      "text": "Hypothesis: approved first time. H1: New users who see the onboarding checklist have higher week-1 retention than new users who don't.",
+      "runId": "r_labsecond_onboard02",
+      "teamVersion": 2,
+      "sectionId": "hypothesis",
+      "createdAt": "2026-11-24T11:41:12.600Z"
+    },
+    {
+      "id": 2,
+      "kind": "note",
+      "text": "The product and data leads want a ship / don't-ship decision rule in every experiment design.",
+      "runId": "r_labcompleted_onboard01",
+      "teamVersion": 2,
+      "sectionId": null,
+      "createdAt": "2026-11-24T09:16:22.650Z"
+    },
+    {
+      "id": 1,
+      "kind": "outcome",
+      "text": "Hypothesis: approved first time. H1: New users who see the onboarding checklist have higher week-1 retention than new users who don't.",
+      "runId": "r_labcompleted_onboard01",
+      "teamVersion": 2,
+      "sectionId": "hypothesis",
+      "createdAt": "2026-11-24T09:13:12.600Z"
+    }
+  ],
+  "recentInbox": [
+    {
+      "id": 2,
+      "runId": "r_labsecond_onboard02",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 8,
+      "createdAt": "2026-11-24T11:41:12.600Z"
+    },
+    {
+      "id": 1,
+      "runId": "r_labcompleted_onboard01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 8,
+      "createdAt": "2026-11-24T09:13:12.600Z"
+    }
+  ]
+}

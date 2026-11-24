@@ -1,0 +1,113 @@
+{
+  "teamId": "squad",
+  "name": "Mobile Product Squad",
+  "version": 2,
+  "versionLabel": "v2",
+  "note": "Engineer can read uploaded files; Researcher quotes them",
+  "createdAt": "2026-11-12T15:30:00.000Z",
+  "coordinator": "PL",
+  "members": [
+    {
+      "role": "PL",
+      "personality": "Clear and decisive. Keeps scope tight.",
+      "responsibleFor": "Writes the brief, assigns sections, assembles the final document.",
+      "tools": [
+        "shared_draft",
+        "task_list"
+      ]
+    },
+    {
+      "role": "R",
+      "personality": "Evidence first. Always cites sources, and quotes the uploaded files when they answer the question.",
+      "responsibleFor": "Context, user needs, dependencies.",
+      "tools": [
+        "read_files",
+        "shared_draft"
+      ]
+    },
+    {
+      "role": "D",
+      "personality": "User-centred. Thinks in flows.",
+      "responsibleFor": "Scope from the user's side, milestones that ship value.",
+      "tools": [
+        "shared_draft"
+      ]
+    },
+    {
+      "role": "E",
+      "personality": "Pragmatic. Flags effort and risk early.",
+      "responsibleFor": "Timeline, technical risks, feasibility. Reads the code when a public GitHub repo is linked.",
+      "tools": [
+        "github_repo",
+        "read_files",
+        "shared_draft"
+      ]
+    },
+    {
+      "role": "C",
+      "personality": "Strict but fair. Has no tools for making things.",
+      "responsibleFor": "Reviews every section against the brief.",
+      "tools": [
+        "comment"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "from": "PL",
+      "to": "*",
+      "what": "Assigns sections"
+    },
+    {
+      "from": "*",
+      "to": "PL",
+      "what": "Returns finished sections and open questions"
+    },
+    {
+      "from": "C",
+      "to": "*",
+      "what": "Approves or sends a section back"
+    },
+    {
+      "from": "*",
+      "to": "C",
+      "what": "Submits a section for review"
+    },
+    {
+      "from": "R",
+      "to": "D",
+      "what": "Consult: findings and user needs"
+    },
+    {
+      "from": "D",
+      "to": "R",
+      "what": "Consult: findings and user needs"
+    },
+    {
+      "from": "D",
+      "to": "E",
+      "what": "Consult: feasibility check"
+    },
+    {
+      "from": "E",
+      "to": "D",
+      "what": "Consult: feasibility check"
+    },
+    {
+      "from": "R",
+      "to": "E",
+      "what": "Consult: technical dependencies"
+    },
+    {
+      "from": "E",
+      "to": "R",
+      "what": "Consult: technical dependencies"
+    }
+  ],
+  "guardrails": {
+    "maxTurns": 60,
+    "maxTokens": 150000,
+    "criticRounds": 2,
+    "noProgressTurns": 5
+  }
+}

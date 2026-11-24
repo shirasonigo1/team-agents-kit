@@ -1,0 +1,55 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "team-agents-kit",
+  "main": "src/server.ts",
+  "compatibility_date": "2026-11-20",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Static pages and files in public/. run_worker_first: every request (pages too) goes through the
+  // Worker first, so the access gate in src/access.ts covers everything; the Worker then serves the
+  // files through the ASSETS binding.
+  "assets": { "directory": "public", "binding": "ASSETS", "not_found_handling": "none", "run_worker_first": true },
+
+  // Workers AI (free daily allowance, no API key). Every call goes through the AI Gateway named by
+  // GATEWAY_ID below. Which model a member uses is set per team member (MODELS in src/contract.ts).
+  "ai": { "binding": "AI" },
+
+  // Agents: each class is a Durable Object with its own SQLite storage.
+  "durable_objects": {
+    "bindings": [
+      // Plumbing check (public/plumbing.html): records each test model call.
+      { "name": "HelloAgent", "class_name": "HelloAgent" },
+      // One per run: the coordinator (step machine, trace, guardrails).
+      { "name": "RunAgent", "class_name": "RunAgent" },
+      // One per team member ("squad--R"), shared by every run of the team: memory, inbox, turns log.
+      { "name": "MemberAgent", "class_name": "MemberAgent" }
+    ]
+  },
+  // Durable Object migrations are applied in order on deploy. Never edit or remove a tag that has
+  // been deployed; add a new tag for a new class (or a `deleted_classes` entry to remove one).
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["HelloAgent", "RunAgent", "MemberAgent"] }
+  ],
+
+  // D1 (free): teams and team versions, the runs list and uploaded files. The schema is in
+  // migrations/; apply it with `npm run db:migrate:local` (wrangler dev) and
+  // `npm run db:migrate:remote` (before deploying). Create your own database with
+  // `npx wrangler d1 create team-agents-kit` and put its id here.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "team-agents-kit",
+      "database_id": "ab542a75-aaef-4577-850b-c97dc32e0354",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Plain-text settings. The secret ACCESS_PASSCODE is not here: set it with
+  // `npx wrangler secret put ACCESS_PASSCODE` (deployed) or in .dev.vars (local).
+  "vars": {
+    // AI Gateway id; "default" is created on first use.
+    "GATEWAY_ID": "default"
+  },
+
+  "observability": { "enabled": true }
+}

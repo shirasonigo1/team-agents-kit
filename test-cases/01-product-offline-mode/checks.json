@@ -1,0 +1,28 @@
+{
+  "about": "Mechanical checks for score.mjs, mirroring expected.md (ids match the score sheet there). Regexes are case-insensitive.",
+  "allowNames": ["Brightwell Systems", "Harbourline Lifts", "Calder Fire", "Fire Safety", "Morrow Estates", "City Central", "City Outer", "Coastal South", "Rural North", "Hospital Estate", "Metro Underground", "Site Log", "Sync Kit", "Apple App", "App Store", "Google Play"],
+  "checks": [
+    { "id": "G1", "level": "must", "where": "section:goal", "label": "Goal states the 31 March 2027 beta deadline", "any": ["31 march", "march 31", "2027-03-31", "31/03", "end of march"] },
+    { "id": "G2", "level": "should", "where": "document", "label": "GA go/no-go on 30 April 2027 appears", "any": ["30 april", "april 30", "2027-04-30"] },
+    { "id": "S1", "level": "must", "where": "section:scope", "label": "Non-goal: web dashboard offline", "any": ["web dashboard", "dashboard"] },
+    { "id": "S2", "level": "must", "where": "section:scope", "label": "Scope includes photos and the on-site signature", "all": ["photo", "signature"] },
+    { "id": "S3", "level": "should", "where": "section:scope", "label": "Another file-only non-goal (30-day history or Android < 10)", "any": ["30 days", "30-day", "android 10", "older than android"] },
+    { "id": "M1", "level": "must", "where": "section:milestones", "label": "At least 3 milestones", "minBullets": 3 },
+    { "id": "O1", "level": "must", "where": "section:owners", "label": "Owners use [PLACEHOLDER]-style names", "any": ["\\[[^\\]]+\\]"] },
+    { "id": "O2", "level": "must", "where": "section:owners", "label": "No invented person names in Owners", "noPersonNames": true },
+    { "id": "T1", "level": "should", "where": "section:timeline", "label": "Timeline uses a file date (1 March freeze, 18 March cutoff or 15 Feb leave)", "any": ["1 march", "march 1\\b", "18 march", "march 18", "15 feb", "feb(ruary)? 15", "mid-feb"] },
+    { "id": "R1", "level": "must", "where": "section:risks", "label": "Risks names the SyncKit freeze (planted conflict)", "any": ["synckit", "sync ?kit", "sync sdk", "freeze", "frozen"] },
+    { "id": "R2", "level": "should", "where": "section:risks", "label": "Risks names reduced capacity (leave / 2 engineers in March)", "any": ["leave", "capacity", "two (mobile )?engineers", "2 (mobile )?engineers"] },
+    { "id": "R3", "level": "must", "where": "section:risks", "label": "Risks give mitigations", "any": ["mitigat", "fallback", "reduce", "defer", "descope", "de-scope"] },
+    { "id": "D1", "level": "must", "where": "section:deps", "label": "Dependencies include the Platform team / SyncKit unfreeze", "any": ["platform", "synckit", "sync ?kit", "1 march", "march 1"] },
+    { "id": "D2", "level": "should", "where": "section:deps", "label": "Dependencies include the SEC-12 security review", "any": ["sec-12", "security review", "security team"] },
+    { "id": "D3", "level": "should", "where": "document", "label": "Customer MDM approval (5 working days) appears", "any": ["mdm", "device management"] },
+    { "id": "D4", "level": "must", "where": "section:deps", "label": "Dependencies cites at least one context file", "sources": ["research-notes.md", "connectivity-metrics.csv", "roadmap-constraints.pdf", "stakeholder-thread.docx"] },
+    { "id": "Q1", "level": "must", "where": "open", "label": "Open questions: which plans/tiers get offline mode", "any": ["plan", "tier", "enterprise", "pricing", "pricing committee"] },
+    { "id": "A1", "level": "must", "where": "document", "label": "The <10-minute assumption is challenged with numbers from the CSV", "any": ["35\\.7", "36 ?%", "64 ?%", "44\\.5", "19\\.8", "20 ?%", "41\\.5", "42 ?%", "median.{0,40}(4[0-9]|5[0-9]|6[0-9]) ?min", "longer than 10", "over 10 min", "more than 10 min"] },
+    { "id": "F1", "level": "must", "where": "document", "label": "A file-only fact is used (Harbourline / clause 7.2 / 67 MB / 23 photos / 38 min / SyncKit / SEC-12)", "any": ["harbourline", "clause 7\\.2", "67 ?mb", "23 photos", "38 min", "synckit", "sec-12"] },
+    { "id": "F2", "level": "should", "where": "spans", "label": "The Researcher read every file (Read <file> tool spans)", "readAllFiles": true },
+    { "id": "H1", "level": "must", "where": "document", "label": "No money amounts (none exist in the files)", "none": ["[$€£] ?\\d"] },
+    { "id": "H2", "level": "should", "where": "document", "label": "No code-level claims (no repository was linked)", "none": ["pull request", "in the codebase", "github\\.com", "lines of code"] }
+  ]
+}

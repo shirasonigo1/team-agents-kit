@@ -1,0 +1,29 @@
+Fictional test data for the Team Agents Kit. Tallyfox is invented; all figures are synthetic.
+
+TALLYFOX - RECRUITMENT AND ENROLMENT NOTE FOR THE ONBOARDING CHECKLIST EXPERIMENT
+UX Research Operations, 21 November 2026
+
+1. WHO CAN BE ENROLLED
+- New signups on iOS or Android only. The checklist is built for the mobile apps; there is no web version.
+- Must have a verified birth year showing age 18 or over (policy rule R1). About 86 percent of new mobile signups qualify.
+- Must have the "Help improve Tallyfox" research setting switched on (policy rule R2). About 50 percent of adult signups opt in.
+- Must not be in another onboarding experiment (policy rule R9).
+
+2. HOW MANY PEOPLE WE CAN EXPECT
+- New mobile signups: about 1,000 per week (see baseline-cohorts.csv, 16 weeks from 27 July 2026).
+- Eligible after age and opt-in filters: about 430 per week.
+- Assignment is at signup, 50/50, by a hash of the pseudonymous user id.
+
+3. THE ENROLMENT WINDOW IS FIXED
+- Earliest start: Monday 18 January 2027 (after the ethics board meeting on 14 January and the app release of 15 January).
+- Latest enrolment day: Sunday 14 February 2027. Tallyfox changes its prices on 1 March 2027, and every enrolled user must finish the day 7-13 retention window before the price change is announced in-app on 28 February.
+- That gives 4 weeks of enrolment: roughly 4 x 430 = 1,720 eligible users in total, about 860 per group.
+
+4. NO PANEL TOP-UP
+- In-product experiments cannot use paid panels or incentives (policy rule R8), so we cannot buy extra participants.
+- Marketing has no campaign planned for January-February, so signups will not rise.
+
+5. NOT DECIDED
+- Web signups (about 180 eligible per week) are not covered: the checklist does not exist on web and nobody has decided whether a web version should be built for this study. Raise this with the product director.
+
+Contact: Research Operations lead (role mailbox), not a named person.

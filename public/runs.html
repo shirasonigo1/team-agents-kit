@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runs · Team Agents Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="left">
+    <a class="brand" href="/teams.html">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#18181B" stroke-width="2" aria-hidden="true"><circle cx="14" cy="6" r="3.5"/><circle cx="6" cy="21" r="3.5"/><circle cx="22" cy="21" r="3.5"/><path d="M12.3 9 7.7 18M15.7 9l4.6 9M9.5 21h9"/></svg>
+      Team Agents Kit</a>
+    <nav class="main-nav" aria-label="Main"><a href="/teams.html">Teams</a><a href="/runs.html" aria-current="page">Runs</a></nav>
+  </div>
+  <div class="right">
+    <a class="signout" href="/logout">Sign out</a>
+    <a class="btn primary" href="/new.html" id="new-btn">New run</a>
+  </div>
+</header>
+
+<main class="page narrow">
+  <div class="title-row">
+    <div>
+      <h1 class="title lg">Recent runs</h1>
+      <p class="sub" style="margin-top:4px">Every run keeps its brief, its full trace and the document it produced.</p>
+    </div>
+    <button id="refresh" class="btn" type="button">Refresh</button>
+  </div>
+  <div id="filter"></div>
+  <div id="status" role="status" class="sr-only"></div>
+  <section id="list" aria-label="Runs" class="scroll-x" style="background:#fff;border:1px solid var(--border);border-radius:18px"></section>
+</main>
+<footer class="site-footer"><span>Team Agents Kit</span><a href="/plumbing.html">Plumbing check</a></footer>
+
+<script src="/app.js"></script>
+<script>
+  "use strict";
+  // Recent runs (GET /api/runs), optionally filtered to one team (?team=). Fixture mode uses the list below.
+  const ago = (ms) => new Date(Date.now() - ms).toISOString();
+  const SQ = { teamId: "squad", teamName: "Mobile Product Squad", outputId: "work-plan" };
+  const LAB = { teamId: "ux-research", teamName: "UX Research Team", outputId: "lab-experiment" };
+  const FIXTURE_RUNS = [
+    { runId: "r_labawaiting_onboard01", fixture: "lab-awaiting", title: "Onboarding checklist experiment", status: "awaiting_approval", stopReason: null, createdAt: ago(4 * 60e3), turns: 1, tokens: 1910, sectionsApproved: 0, sectionCount: 7, ...LAB, teamVersion: 2, fileCount: 1 },
+    { runId: "r_running_offline01", fixture: "running", title: "Offline mode launch plan", status: "running", stopReason: null, createdAt: ago(6 * 60e3), turns: 17, tokens: 41330, sectionsApproved: 4, sectionCount: 7, ...SQ, teamVersion: 2, fileCount: 0 },
+    { runId: "r_drafting_offline01", fixture: "drafting", title: "Plan the launch of offline mode for our field-notes app. Target: beta by end of Q1. The team is 4 engineers and 1 designer.", status: "drafting_brief", stopReason: null, createdAt: ago(9 * 60e3), turns: 1, tokens: 1450, sectionsApproved: 0, sectionCount: 7, ...SQ, teamVersion: 3, fileCount: 1 },
+    { runId: "r_awaitingapproval_offline01", fixture: "awaiting", title: "Offline mode launch plan", status: "awaiting_approval", stopReason: null, createdAt: ago(25 * 60e3), turns: 1, tokens: 1830, sectionsApproved: 0, sectionCount: 7, ...SQ, teamVersion: 3, fileCount: 2 },
+    { runId: "r_labsecond_onboard02", fixture: "lab-second", title: "Onboarding checklist experiment (second run)", status: "completed", stopReason: null, createdAt: ago(2 * 3600e3), turns: 26, tokens: 54610, sectionsApproved: 7, sectionCount: 7, ...LAB, teamVersion: 2, fileCount: 1 },
+    { runId: "r_completed_offline01", fixture: "completed", title: "Offline mode launch plan", status: "completed", stopReason: null, createdAt: ago(3 * 3600e3), turns: 28, tokens: 62210, sectionsApproved: 7, sectionCount: 7, ...SQ, teamVersion: 3, fileCount: 1 },
+    { runId: "r_labcompleted_onboard01", fixture: "lab-completed", title: "Onboarding checklist experiment", status: "completed", stopReason: null, createdAt: ago(20 * 3600e3), turns: 28, tokens: 59540, sectionsApproved: 7, sectionCount: 7, ...LAB, teamVersion: 2, fileCount: 1 },
+    { runId: "r_stopped_offline01", fixture: "stopped", title: "Offline mode launch plan", status: "stopped", stopReason: "Stopped by you. The run finished its current turn and then stopped.", createdAt: ago(26 * 3600e3), turns: 18, tokens: 44090, sectionsApproved: 5, sectionCount: 7, ...SQ, teamVersion: 2, fileCount: 0 },
+    { runId: "r_failed_offline01", fixture: "failed", title: "Offline mode launch plan", status: "failed", stopReason: "Model call failed 3 times in a row (Workers AI: 429 Too Many Requests).", createdAt: ago(50 * 3600e3), turns: 8, tokens: 17850, sectionsApproved: 2, sectionCount: 7, ...SQ, teamVersion: 1, fileCount: 0 },
+    { runId: "r_legacy_offline01", fixture: "legacy", title: "Offline mode launch plan (legacy run)", status: "completed", stopReason: null, createdAt: ago(80 * 3600e3), turns: 25, tokens: 62840, sectionsApproved: 7, sectionCount: 7 }
+  ];
+  const teamFilter = queryParam("team");
+
+  /** The runs table, or the empty states (with and without a team filter). */
+  function render(all) {
+    const list = $("list");
+    const runs = teamFilter ? all.filter((r) => r.teamId === teamFilter) : all;
+    if (teamFilter) {
+      const name = (all.find((r) => r.teamId === teamFilter) || {}).teamName || teamFilter;
+      $("filter").replaceChildren(h("div", { class: "filter-bar" }, `Showing ${plural(runs.length, "run")} of ${name}`,
+        h("a", { class: "btn sm", href: appLink("/runs.html") }, "Show all runs")));
+    }
+    if (!runs.length && teamFilter) {
+      list.replaceChildren(h("div", { class: "empty-state" }, h("div", { class: "h2", style: "color:var(--text)" }, "No runs with this team yet"),
+        h("a", { class: "btn primary", href: appLink("/new.html", { team: teamFilter }) }, icon("plus"), "Start a run")));
+      return;
+    }
+    if (!runs.length) {
+      list.replaceChildren(h("div", { class: "empty-state" },
+        h("div", { class: "h2" , style: "color:var(--text)" }, "No runs yet"),
+        h("p", { style: "margin:0" }, "Start a run: the team's coordinator drafts a brief, you approve it, and the team writes the document."),
+        h("a", { class: "btn primary", href: "/new.html" }, icon("plus"), "New run")));
+      return;
+    }
+    const head = h("tr", null, ...["Run", "Team", "Output", "Files", "Status", "Turns", "Tokens", "Sections", "Created"].map((t) => h("th", { scope: "col" }, t)));
+    const rows = runs.map((r) => {
+      const href = r.fixture ? `/run.html?fixture=${encodeURIComponent(r.fixture)}` : `/run.html?id=${encodeURIComponent(r.runId)}`;
+      return h("tr", null,
+        h("td", { style: "min-width:190px;max-width:340px" }, h("a", { class: "rowlink", href, title: (r.title || "").length > 70 ? r.title : null, style: "display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere" }, r.title || "Untitled run")),
+        h("td", { style: "min-width:140px" }, r.teamName ? `${r.teamName} · v${r.teamVersion}` : r.teamId ? `${r.teamId}${r.teamVersion ? ` · v${r.teamVersion}` : ""}` : h("span", { class: "muted", title: "Run created before saved teams" }, "Built-in team")),
+        h("td", { style: "min-width:110px" }, (OUTPUTS[r.outputId] || OUTPUTS["work-plan"]).name),
+        h("td", { class: "tabular" }, typeof r.fileCount === "number" && r.fileCount > 0 ? String(r.fileCount) : h("span", { class: "muted", "aria-label": "None" }, "—")),
+        h("td", null, runStatusPill(r.status),
+          r.stopReason ? h("div", { class: "xs muted", style: "margin-top:4px;max-width:240px;overflow-wrap:anywhere" }, r.stopReason) : null),
+        h("td", { class: "tabular" }, fmtNumber(r.turns)),
+        h("td", { class: "tabular" }, fmtNumber(r.tokens)),
+        h("td", { class: "tabular", style: "white-space:nowrap" }, `${r.sectionsApproved} of ${r.sectionCount} approved`),
+        h("td", { class: "tabular", title: fmtDateTime(r.createdAt) }, h("time", { datetime: r.createdAt }, fmtRelative(r.createdAt))));
+    });
+    list.replaceChildren(h("table", { class: "runs", style: "min-width:1100px" }, h("caption", { class: "sr-only" }, "Recent runs, newest first"), h("thead", null, head), h("tbody", null, rows)));
+  }
+
+  /** Load the runs (or the fixture list) and render them. */
+  async function load() {
+    $("status").textContent = "Loading runs…";
+    $("list").replaceChildren(h("div", { class: "empty-state" }, h("span", { class: "spinner", "aria-hidden": "true" }), "Loading runs…"));
+    try {
+      if (FIXTURE === "error") { await delay(250); throw new Error("HTTP 500: Simulated server error (fixture)"); }
+      const runs = FIXTURE ? (FIXTURE === "empty" ? [] : FIXTURE_RUNS) : await fetchJSON("/api/runs");
+      if (!Array.isArray(runs)) throw new Error("Unexpected response from /api/runs.");
+      render(runs);
+      $("status").textContent = `${plural(teamFilter ? runs.filter((r) => r.teamId === teamFilter).length : runs.length, "run")} loaded.`;
+    } catch (err) {
+      $("status").textContent = "";
+      $("list").replaceChildren(h("div", { class: "empty-state" },
+        h("div", { class: "notice err", role: "alert", style: "text-align:left" }, icon("warn"), h("span", null, h("strong", null, "Could not load runs. "), err.message)),
+        h("button", { class: "btn", type: "button", onClick: load }, "Try again")));
+    }
+  }
+  $("refresh").addEventListener("click", load);
+  load();
+</script>
+</body>
+</html>

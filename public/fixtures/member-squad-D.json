@@ -1,0 +1,88 @@
+{
+  "agentName": "squad--D",
+  "teamId": "squad",
+  "role": "D",
+  "stats": {
+    "runs": 13,
+    "turns": 41,
+    "inputTokens": 71560,
+    "outputTokens": 19240,
+    "lastActiveAt": "2026-11-24T09:16:52.500Z"
+  },
+  "memories": [
+    {
+      "id": 4,
+      "kind": "lesson",
+      "text": "When the Engineer consult is off, base milestones on the scope section and the brief's deadline.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": null,
+      "createdAt": "2026-11-24T09:16:52.500Z"
+    },
+    {
+      "id": 3,
+      "kind": "outcome",
+      "text": "Milestones: approved first time. 1 · Local storage layer: notes and photos are saved on the device first.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": "milestones",
+      "createdAt": "2026-11-24T09:14:13.850Z"
+    },
+    {
+      "id": 2,
+      "kind": "outcome",
+      "text": "Scope and non-goals: approved first time. In scope: create, edit and delete notes offline; queue photo attachments; sync on reconnect.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": "scope",
+      "createdAt": "2026-11-24T09:13:52.550Z"
+    },
+    {
+      "id": 1,
+      "kind": "lesson",
+      "text": "Milestones: each milestone must ship something a user notices, not an internal refactor.",
+      "runId": "r_squad_beta02",
+      "teamVersion": 2,
+      "sectionId": "milestones",
+      "createdAt": "2026-11-20T14:05:00.000Z"
+    }
+  ],
+  "recentInbox": [
+    {
+      "id": 4,
+      "runId": "r_completed_offline01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 15,
+      "createdAt": "2026-11-24T09:14:13.850Z"
+    },
+    {
+      "id": 3,
+      "runId": "r_completed_offline01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 13,
+      "createdAt": "2026-11-24T09:13:52.550Z"
+    },
+    {
+      "id": 2,
+      "runId": "r_completed_offline01",
+      "from": "R",
+      "kind": "answer",
+      "text": "68% of sessions start with no signal and last hours offline (field-notes-roadmap.pdf). Users capture short notes and photos in bursts, then sync at the end of the day. Losing a note is the top complaint.",
+      "spanId": 11,
+      "createdAt": "2026-11-24T09:13:30.350Z"
+    },
+    {
+      "id": 1,
+      "runId": "r_completed_offline01",
+      "from": "PL",
+      "kind": "assign",
+      "text": "Section tasks: Scope and non-goals, Milestones.",
+      "spanId": 4,
+      "createdAt": "2026-11-24T09:13:05.100Z"
+    }
+  ]
+}

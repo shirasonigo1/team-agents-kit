@@ -1,0 +1,118 @@
+{
+  "team": {
+    "teamId": "growth",
+    "name": "Growth squad",
+    "version": 2,
+    "versionLabel": "v2",
+    "note": "No code or file access; fewer turns",
+    "createdAt": "2026-11-21T09:00:00.000Z",
+    "coordinator": "PL",
+    "members": [
+      {
+        "role": "PL",
+        "personality": "Clear and decisive. Keeps scope tight.",
+        "responsibleFor": "Writes the brief, assigns sections, assembles the final document.",
+        "tools": [
+          "shared_draft",
+          "task_list"
+        ]
+      },
+      {
+        "role": "R",
+        "personality": "Evidence first. Always cites sources.",
+        "responsibleFor": "Context, user needs, dependencies.",
+        "tools": [
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "D",
+        "personality": "User-centred. Thinks in flows.",
+        "responsibleFor": "Scope from the user's side, milestones that ship value.",
+        "tools": [
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "E",
+        "personality": "Pragmatic. Flags effort and risk early.",
+        "responsibleFor": "Timeline, technical risks, feasibility from general knowledge (no code access).",
+        "tools": [
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "C",
+        "personality": "Strict but fair. Has no tools for making things.",
+        "responsibleFor": "Reviews every section against the brief.",
+        "tools": [
+          "comment"
+        ]
+      }
+    ],
+    "rules": [
+      {
+        "from": "PL",
+        "to": "*",
+        "what": "Assigns sections"
+      },
+      {
+        "from": "*",
+        "to": "PL",
+        "what": "Returns finished sections and open questions"
+      },
+      {
+        "from": "C",
+        "to": "*",
+        "what": "Approves or sends a section back"
+      },
+      {
+        "from": "*",
+        "to": "C",
+        "what": "Submits a section for review"
+      },
+      {
+        "from": "R",
+        "to": "D",
+        "what": "Consult: findings and user needs"
+      },
+      {
+        "from": "D",
+        "to": "R",
+        "what": "Consult: findings and user needs"
+      },
+      {
+        "from": "D",
+        "to": "E",
+        "what": "Consult: feasibility check"
+      },
+      {
+        "from": "E",
+        "to": "D",
+        "what": "Consult: feasibility check"
+      }
+    ],
+    "guardrails": {
+      "maxTurns": 40,
+      "maxTokens": 120000,
+      "criticRounds": 1,
+      "noProgressTurns": 5
+    }
+  },
+  "versions": [
+    {
+      "version": 2,
+      "versionLabel": "v2",
+      "note": "No code or file access; fewer turns",
+      "createdAt": "2026-11-21T09:00:00.000Z",
+      "runCount": 0
+    },
+    {
+      "version": 1,
+      "versionLabel": "v1",
+      "note": "Copied from the Product squad template",
+      "createdAt": "2026-11-20T12:00:00.000Z",
+      "runCount": 0
+    }
+  ]
+}

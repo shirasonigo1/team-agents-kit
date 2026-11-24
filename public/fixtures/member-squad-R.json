@@ -1,0 +1,88 @@
+{
+  "agentName": "squad--R",
+  "teamId": "squad",
+  "role": "R",
+  "stats": {
+    "runs": 13,
+    "turns": 34,
+    "inputTokens": 57620,
+    "outputTokens": 12710,
+    "lastActiveAt": "2026-11-24T09:16:48.050Z"
+  },
+  "memories": [
+    {
+      "id": 3,
+      "kind": "note",
+      "text": "The uploaded roadmap's field research section answers most user-need questions; read it before answering.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": null,
+      "createdAt": "2026-11-24T09:16:48.050Z"
+    },
+    {
+      "id": 2,
+      "kind": "outcome",
+      "text": "Dependencies: approved first time. Choose the on-device database before the local storage work starts (the repo has no local store today).",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": "deps",
+      "createdAt": "2026-11-24T09:16:14.000Z"
+    },
+    {
+      "id": 1,
+      "kind": "note",
+      "text": "Field users go hours without signal and sync at the end of the day; losing a note is their top complaint.",
+      "runId": "r_squad_beta02",
+      "teamVersion": 2,
+      "sectionId": null,
+      "createdAt": "2026-11-20T14:05:00.000Z"
+    }
+  ],
+  "recentInbox": [
+    {
+      "id": 5,
+      "runId": "r_completed_offline01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 30,
+      "createdAt": "2026-11-24T09:16:14.000Z"
+    },
+    {
+      "id": 4,
+      "runId": "r_completed_offline01",
+      "from": "E",
+      "kind": "answer",
+      "text": "Pick an on-device database first; move to client-generated note IDs; confirm background sync permissions on both platforms.",
+      "spanId": 27,
+      "createdAt": "2026-11-24T09:15:52.050Z"
+    },
+    {
+      "id": 3,
+      "runId": "r_completed_offline01",
+      "from": "E",
+      "kind": "question",
+      "text": "Question for Researcher. what breaks offline in field conditions?",
+      "spanId": 19,
+      "createdAt": "2026-11-24T09:14:42.450Z"
+    },
+    {
+      "id": 2,
+      "runId": "r_completed_offline01",
+      "from": "D",
+      "kind": "question",
+      "text": "Question for Researcher. what do field users need with no signal?",
+      "spanId": 9,
+      "createdAt": "2026-11-24T09:13:19.950Z"
+    },
+    {
+      "id": 1,
+      "runId": "r_completed_offline01",
+      "from": "PL",
+      "kind": "assign",
+      "text": "Section task: Dependencies.",
+      "spanId": 6,
+      "createdAt": "2026-11-24T09:13:06.200Z"
+    }
+  ]
+}

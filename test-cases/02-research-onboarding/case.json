@@ -1,0 +1,14 @@
+{
+  "id": "02-research-onboarding",
+  "title": "Onboarding checklist and week-1 retention",
+  "teamId": "ux-research",
+  "output": "lab-experiment",
+  "task": "Design an experiment to test whether an onboarding checklist increases week-1 retention of new users in the Tallyfox mobile app. Fictional scenario for testing: Tallyfox is a budgeting and invoicing app for freelancers.\n\nThe change: new users see a dashboard card with a 4-step checklist (add your first expense, connect a bank account, create your first invoice, set a monthly budget) instead of the current empty dashboard. The control group keeps today's onboarding.\n\nWhat we need: a testable hypothesis, the variables, the method, who takes part and how they are assigned, a sample size with its justification, the exact metric definitions, an analysis plan with a decision rule, and the risks and ethics, including consent, data retention and stop conditions.\n\nNumbers to use: the baseline week-1 retention is in the attached cohort data. The smallest effect worth acting on is +6 percentage points. Use a two-sided test, alpha 0.05, power 0.8. Check whether we can actually enrol enough users in the available window, and say what we should do if we cannot.\n\nConstraints: follow our research ethics and data-handling policy (attached) to the letter. The design goes to the Research Review Board on 14 January 2027, so it is due 7 January 2027. Audience: the Research Review Board and the product director. Use only facts from the attached files and flag what they do not answer.",
+  "files": [
+    "files/prior-studies.pdf",
+    "files/baseline-cohorts.csv",
+    "files/ethics-policy.docx",
+    "files/recruitment-panel.txt"
+  ],
+  "repo": null
+}

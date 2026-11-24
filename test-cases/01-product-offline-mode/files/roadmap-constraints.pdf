@@ -1,0 +1,126 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [7 0 R 9 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Length 4676 >>
+stream
+BT /F2 16 Tf 56 762 Td (SiteLog Q1 2027 roadmap and delivery constraints) Tj ET
+BT /F1 10 Tf 56 744.5 Td (Fictional test data for the Team Agents Kit   . Brightwell Systems, SiteLog and all customer) Tj ET
+BT /F1 10 Tf 56 731 Td (names are invented.) Tj ET
+BT /F1 10 Tf 56 717.5 Td (Brightwell Systems - Product and Engineering - one-pager - version of 18 November 2026) Tj ET
+BT /F2 12 Tf 56 689.5 Td (Q1 2027 priorities \(in order\)) Tj ET
+BT /F1 10 Tf 58 676 Td (-) Tj ET
+BT /F1 10 Tf 70 676 Td (1. Offline mode for the SiteLog mobile app \(iOS and Android\): beta with 3 pilot customers by) Tj ET
+BT /F1 10 Tf 70 662.5 Td (31 March 2027.) Tj ET
+BT /F1 10 Tf 58 649 Td (-) Tj ET
+BT /F1 10 Tf 70 649 Td (2. EU data-residency migration of the sync backend \(Platform team\). Contractual date: 28) Tj ET
+BT /F1 10 Tf 70 635.5 Td (February 2027.) Tj ET
+BT /F1 10 Tf 58 622 Td (-) Tj ET
+BT /F1 10 Tf 70 622 Td (3. Accessibility fixes from the October audit \(small, Design-led\).) Tj ET
+BT /F2 12 Tf 56 594 Td (Pilot customers for the offline beta) Tj ET
+BT /F1 10 Tf 58 580.5 Td (-) Tj ET
+BT /F1 10 Tf 70 580.5 Td (Harbourline Lifts \(largest account, 140 inspector seats\). Contract renewal: 30 April 2027.) Tj ET
+BT /F1 10 Tf 70 567 Td (Their procurement lead wrote that offline capture is a renewal condition.) Tj ET
+BT /F1 10 Tf 58 553.5 Td (-) Tj ET
+BT /F1 10 Tf 70 553.5 Td (Calder Fire Safety \(60 seats, hospital estates\).) Tj ET
+BT /F1 10 Tf 58 540 Td (-) Tj ET
+BT /F1 10 Tf 70 540 Td (Morrow Estates \(25 seats, rural housing stock\).) Tj ET
+BT /F2 12 Tf 56 512 Td (Constraint C1 - SyncKit is frozen until 1 March 2027) Tj ET
+BT /F1 10 Tf 56 498.5 Td (SyncKit is our internal sync SDK \(version 3.2\), owned by the Platform team. Because of the) Tj ET
+BT /F1 10 Tf 56 485 Td (data-residency migration, SyncKit's protocol and server schema are frozen from 1 December 2026) Tj ET
+BT /F1 10 Tf 56 471.5 Td (to 1 March 2027. No changes to the sync protocol, no new server-side conflict handling, no) Tj ET
+BT /F1 10 Tf 56 458 Td (schema changes. Client-side code that only uses the existing SyncKit 3.2 API is allowed. SyncKit) Tj ET
+BT /F1 10 Tf 56 444.5 Td (3.2 has no offline queue and no conflict resolution: it assumes the device is online when a) Tj ET
+BT /F1 10 Tf 56 431 Td (report is saved.) Tj ET
+BT /F2 12 Tf 56 403 Td (Constraint C2 - team capacity) Tj ET
+BT /F1 10 Tf 58 389.5 Td (-) Tj ET
+BT /F1 10 Tf 70 389.5 Td (Squad: 3 mobile engineers, 1 backend engineer, 1 product designer at 50 percent \(shared with) Tj ET
+BT /F1 10 Tf 70 376 Td (the web dashboard\).) Tj ET
+BT /F1 10 Tf 58 362.5 Td (-) Tj ET
+BT /F1 10 Tf 70 362.5 Td (One mobile engineer is on planned leave from 15 February to 15 April 2027. Effective mobile) Tj ET
+BT /F1 10 Tf 70 349 Td (capacity in March: 2 engineers.) Tj ET
+BT /F1 10 Tf 58 335.5 Td (-) Tj ET
+BT /F1 10 Tf 70 335.5 Td (The backend engineer is lent to the Platform team for the migration in February \(about 50) Tj ET
+BT /F1 10 Tf 70 322 Td (percent\).) Tj ET
+BT /F2 12 Tf 56 294 Td (Constraint C3 - release train) Tj ET
+BT /F1 10 Tf 58 280.5 Td (-) Tj ET
+BT /F1 10 Tf 70 280.5 Td (Mobile releases ship every two weeks. Release cutoff is Thursday; App Store review takes) Tj ET
+BT /F1 10 Tf 70 267 Td (about 2 working days.) Tj ET
+BT /F1 10 Tf 58 253.5 Td (-) Tj ET
+BT /F1 10 Tf 70 253.5 Td (Last release train that reaches pilot users before 31 March: cutoff Thursday 18 March 2027.) Tj ET
+BT /F1 10 Tf 58 240 Td (-) Tj ET
+BT /F1 10 Tf 70 240 Td (Pilot customers install through their mobile device management \(MDM\); Harbourline needs 5) Tj ET
+BT /F1 10 Tf 70 226.5 Td (working days to approve a new build.) Tj ET
+BT /F2 12 Tf 56 198.5 Td (Constraint C4 - security policy SEC-12) Tj ET
+BT /F1 10 Tf 56 185 Td (Any data stored on a device must be encrypted at rest, and the app must be able to wipe local) Tj ET
+BT /F1 10 Tf 56 171.5 Td (data remotely. A feature that stores reports or photos on the device needs a security review by) Tj ET
+BT /F1 10 Tf 56 158 Td (the Security team: 10 working days, booked at least 2 weeks ahead.) Tj ET
+BT /F2 12 Tf 56 130 Td (Known technical facts) Tj ET
+BT /F1 10 Tf 58 116.5 Td (-) Tj ET
+BT /F1 10 Tf 70 116.5 Td (A typical inspection holds about 67 MB of photos \(see field research\). Older Android devices) Tj ET
+BT /F1 10 Tf 70 103 Td (in the Morrow fleet have 32 GB storage.) Tj ET
+BT /F1 10 Tf 58 89.5 Td (-) Tj ET
+BT /F1 10 Tf 70 89.5 Td (Today a failed save shows a generic error and the report stays in memory only; force-closing) Tj ET
+BT /F1 10 Tf 70 76 Td (the app loses it.) Tj ET
+BT /F1 8 Tf 56 30 Td (Fictional test data for the Team Agents Kit    - page 1 of 2) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 823 >>
+stream
+BT /F2 12 Tf 56 770 Td (Explicit non-goals for Q1) Tj ET
+BT /F1 10 Tf 58 756.5 Td (-) Tj ET
+BT /F1 10 Tf 70 756.5 Td (Offline access to the web dashboard.) Tj ET
+BT /F1 10 Tf 58 743 Td (-) Tj ET
+BT /F1 10 Tf 70 743 Td (Offline report history older than 30 days.) Tj ET
+BT /F1 10 Tf 58 729.5 Td (-) Tj ET
+BT /F1 10 Tf 70 729.5 Td (Support for Android versions older than Android 10.) Tj ET
+BT /F1 10 Tf 58 716 Td (-) Tj ET
+BT /F1 10 Tf 70 716 Td (New checklist templates or a redesign of the inspection flow.) Tj ET
+BT /F2 12 Tf 56 688 Td (Decisions still needed \(owner: Product\)) Tj ET
+BT /F1 10 Tf 58 674.5 Td (-) Tj ET
+BT /F1 10 Tf 70 674.5 Td (Which plans include offline mode is not decided yet \(see the Sales thread\).) Tj ET
+BT /F1 8 Tf 56 30 Td (Fictional test data for the Team Agents Kit    - page 2 of 2) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Title (SiteLog Q1 2027 roadmap and delivery constraints) /Producer (Team Agents Kit    test-case builder) >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000127 00000 n 
+0000000224 00000 n 
+0000000326 00000 n 
+0000000431 00000 n 
+0000005159 00000 n 
+0000005305 00000 n 
+0000006179 00000 n 
+0000006325 00000 n 
+trailer
+<< /Size 11 /Root 1 0 R /Info 10 0 R >>
+startxref
+6454
+%%EOF

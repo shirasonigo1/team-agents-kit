@@ -1,0 +1,72 @@
+[
+  {
+    "agentName": "growth--PL",
+    "teamId": "growth",
+    "role": "PL",
+    "stats": {
+      "runs": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "lastActiveAt": null
+    },
+    "memories": [],
+    "recentInbox": []
+  },
+  {
+    "agentName": "growth--R",
+    "teamId": "growth",
+    "role": "R",
+    "stats": {
+      "runs": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "lastActiveAt": null
+    },
+    "memories": [],
+    "recentInbox": []
+  },
+  {
+    "agentName": "growth--D",
+    "teamId": "growth",
+    "role": "D",
+    "stats": {
+      "runs": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "lastActiveAt": null
+    },
+    "memories": [],
+    "recentInbox": []
+  },
+  {
+    "agentName": "growth--E",
+    "teamId": "growth",
+    "role": "E",
+    "stats": {
+      "runs": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "lastActiveAt": null
+    },
+    "memories": [],
+    "recentInbox": []
+  },
+  {
+    "agentName": "growth--C",
+    "teamId": "growth",
+    "role": "C",
+    "stats": {
+      "runs": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "lastActiveAt": null
+    },
+    "memories": [],
+    "recentInbox": []
+  }
+]

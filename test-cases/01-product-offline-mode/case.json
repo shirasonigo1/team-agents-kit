@@ -1,0 +1,14 @@
+{
+  "id": "01-product-offline-mode",
+  "title": "SiteLog offline mode: beta work plan",
+  "teamId": "squad",
+  "output": "work-plan",
+  "task": "Write the work plan for launching offline mode in the SiteLog mobile app (iOS and Android). Fictional scenario for testing: Brightwell Systems, field-inspection software for lift and fire-safety inspectors.\n\nGoal: inspectors can complete a full inspection with no connection (checklist, photos, customer signature) and the report syncs automatically when the device is back online, without losing data. Beta to our three pilot customers by 31 March 2027; go/no-go for general availability on 30 April 2027.\n\nWhat we believe today (please check against the attached files): most connectivity gaps are short, under 10 minutes, so a retry queue on top of our existing sync layer may be enough.\n\nTeam: 3 mobile engineers, 1 backend engineer, 1 designer at 50 percent. There is no public code repository for this product, so do not estimate against code.\n\nThe plan must cover scope and explicit non-goals, 3 to 5 milestones that each ship value to inspectors, owners (use placeholders, not names), a timeline up to the deadline, the top risks with mitigations, dependencies on other teams and decisions, and open questions we still have to answer.\n\nAudience: Head of Product and the customer success leads, for the December planning meeting. Keep it to what the attached research, metrics, roadmap and stakeholder thread support; flag anything they do not answer.",
+  "files": [
+    "files/research-notes.md",
+    "files/connectivity-metrics.csv",
+    "files/roadmap-constraints.pdf",
+    "files/stakeholder-thread.docx"
+  ],
+  "repo": null
+}

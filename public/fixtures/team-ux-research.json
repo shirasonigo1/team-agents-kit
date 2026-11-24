@@ -1,0 +1,124 @@
+{
+  "team": {
+    "teamId": "ux-research",
+    "name": "UX Research Team",
+    "version": 2,
+    "versionLabel": "v2",
+    "note": "Data analyst always uses the calculator; Data analyst ↔ Ethics reviewer consult off",
+    "createdAt": "2026-11-23T16:20:00.000Z",
+    "templateId": "research-lab",
+    "outputId": "lab-experiment",
+    "coordinator": "PI",
+    "members": [
+      {
+        "role": "PI",
+        "personality": "Rigorous and focused. States the question before the method.",
+        "responsibleFor": "Writes the brief, owns the hypothesis, assembles the experiment design.",
+        "tools": [
+          "shared_draft",
+          "task_list"
+        ]
+      },
+      {
+        "role": "MS",
+        "personality": "Precise. Prefers the simplest design that answers the question.",
+        "responsibleFor": "Variables, method, sample and controls.",
+        "tools": [
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "DA",
+        "personality": "Quantitative and sceptical. Always runs the sample-size calculator before quoting a number of participants.",
+        "responsibleFor": "Measurements, analysis plan, sample size.",
+        "tools": [
+          "sample_size",
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "ER",
+        "personality": "Protective of participants. Asks who could be harmed and how consent works.",
+        "responsibleFor": "Risks and ethics: consent, privacy, harm, data handling.",
+        "tools": [
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "C",
+        "personality": "Strict but fair. Has no tools for making things.",
+        "responsibleFor": "Reviews every section against the brief.",
+        "tools": [
+          "comment"
+        ]
+      }
+    ],
+    "rules": [
+      {
+        "from": "PI",
+        "to": "*",
+        "what": "Assigns sections"
+      },
+      {
+        "from": "*",
+        "to": "PI",
+        "what": "Returns finished sections and open questions"
+      },
+      {
+        "from": "C",
+        "to": "*",
+        "what": "Approves or sends a section back"
+      },
+      {
+        "from": "*",
+        "to": "C",
+        "what": "Submits a section for review"
+      },
+      {
+        "from": "MS",
+        "to": "DA",
+        "what": "Consult: measurement and sample size"
+      },
+      {
+        "from": "DA",
+        "to": "MS",
+        "what": "Consult: measurement and sample size"
+      },
+      {
+        "from": "MS",
+        "to": "ER",
+        "what": "Consult: participant risk in the procedure"
+      },
+      {
+        "from": "ER",
+        "to": "MS",
+        "what": "Consult: participant risk in the procedure"
+      }
+    ],
+    "guardrails": {
+      "maxTurns": 60,
+      "maxTokens": 120000,
+      "criticRounds": 2,
+      "noProgressTurns": 5
+    }
+  },
+  "versions": [
+    {
+      "version": 2,
+      "versionLabel": "v2",
+      "note": "Data analyst always uses the calculator; Data analyst ↔ Ethics reviewer consult off",
+      "createdAt": "2026-11-23T16:20:00.000Z",
+      "runCount": 2
+    },
+    {
+      "version": 1,
+      "versionLabel": "v1",
+      "note": "Copied from the Research lab template",
+      "createdAt": "2026-11-18T10:00:00.000Z",
+      "runCount": 1
+    }
+  ]
+}

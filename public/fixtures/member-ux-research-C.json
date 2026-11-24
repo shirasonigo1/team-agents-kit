@@ -1,0 +1,33 @@
+{
+  "agentName": "ux-research--C",
+  "teamId": "ux-research",
+  "role": "C",
+  "stats": {
+    "runs": 2,
+    "turns": 17,
+    "inputTokens": 26420,
+    "outputTokens": 2500,
+    "lastActiveAt": "2026-11-24T11:44:18.750Z"
+  },
+  "memories": [
+    {
+      "id": 2,
+      "kind": "note",
+      "text": "Sample and controls now arrives with assignment and control defined; review it like any other section.",
+      "runId": "r_labsecond_onboard02",
+      "teamVersion": 2,
+      "sectionId": null,
+      "createdAt": "2026-11-24T11:44:18.750Z"
+    },
+    {
+      "id": 1,
+      "kind": "lesson",
+      "text": "Check Sample and controls for the assignment method and a defined control condition.",
+      "runId": "r_labcompleted_onboard01",
+      "teamVersion": 2,
+      "sectionId": null,
+      "createdAt": "2026-11-24T09:16:41.050Z"
+    }
+  ],
+  "recentInbox": []
+}

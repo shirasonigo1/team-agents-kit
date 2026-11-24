@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team · Team Agents Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="left">
+    <a class="brand" href="/teams.html">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#18181B" stroke-width="2" aria-hidden="true"><circle cx="14" cy="6" r="3.5"/><circle cx="6" cy="21" r="3.5"/><circle cx="22" cy="21" r="3.5"/><path d="M12.3 9 7.7 18M15.7 9l4.6 9M9.5 21h9"/></svg>
+      Team Agents Kit</a>
+    <nav class="main-nav" aria-label="Main"><a href="/teams.html" aria-current="page">Teams</a><a href="/runs.html">Runs</a></nav>
+  </div>
+  <div class="right">
+    <a class="signout" href="/logout">Sign out</a>
+    <a class="btn primary" href="/new.html" id="new-btn">New run</a>
+  </div>
+</header>
+
+<main class="page narrow" id="main">
+  <div id="head"></div>
+  <div id="status" role="status" class="sr-only"></div>
+  <div id="save"></div>
+  <div id="body"><div class="empty-state"><span class="spinner" aria-hidden="true"></span>Loading the team…</div></div>
+</main>
+<footer class="site-footer"><span>Team Agents Kit</span><a href="/plumbing.html">Plumbing check</a></footer>
+
+<script src="/app.js"></script>
+<script>
+"use strict";
+// Team editor: shows one team version (?id=<teamId>, optional &v=<n> for an older, read-only version). Edits go into a
+// draft of the latest version; "Save as vN" posts the draft as a new version with a change note. Each member card also
+// shows that member's agent: its stats across runs and its long-term memory.
+const teamId = queryParam("id");
+const vParam = queryParam("v") && /^\d+$/.test(queryParam("v")) ? Number(queryParam("v")) : null;
+
+let latest = null;        // TeamConfig, newest version
+let versions = [];        // TeamVersionSummary[], newest first
+let viewed = null;        // TeamConfig on screen (latest, or an older one read-only)
+let readOnly = false;
+let draft = null;         // { members: MemberConfig[] (model always set), consults: { "R-D": bool, … }, guardRaw: { key: string } }
+const editing = new Set();
+let savePanel = false, saveNote = "", saveBusy = false, saveError = null;
+let flash = null;
+
+// Each member's own Agent (shared by every run and version of this team) and its memory.
+let agents = null;        // Map role → MemberView (list: stats + ≤ 5 newest memories) | null while loading
+let agentsError = null;
+const agentFull = new Map();  // role → { loading, error, view } after "Show all"
+const agentOpen = new Set();  // roles whose full memory list is shown
+let clearAsk = null;          // role waiting for the clear confirmation
+let clearBusy = null;         // role being cleared
+const clearError = new Map(); // role → message
+
+// ---------- Draft ----------
+/** Key of a consult pair in draft.consults, e.g. "R-D". */
+const pairKey = (p) => `${p.a}-${p.b}`;
+/** An editable copy of one member. The model is always filled in (missing = the default model). */
+function draftMemberFrom(cfg, id) {
+  const m = memberOf(cfg, id) || { role: id, personality: "", responsibleFor: "", tools: [] };
+  return { role: id, personality: m.personality, responsibleFor: m.responsibleFor, tools: m.tools.slice(), model: memberModel(cfg, id) };
+}
+/** A fresh draft of a team version: members, consult switches, and the guardrail inputs as typed. */
+function draftFrom(cfg) {
+  const consults = {};
+  for (const p of consultPairsOf(cfg)) consults[pairKey(p)] = consultPairOn(cfg.rules, p.a, p.b);
+  const guardRaw = {};
+  for (const f of GUARDRAIL_FIELDS) guardRaw[f.key] = String(cfg.guardrails[f.key]);
+  return { members: teamRoles(cfg).map((id) => draftMemberFrom(cfg, id)), consults, guardRaw };
+}
+function draftMember(id) { return draft.members.find((m) => m.role === id); }
+/** The latest version's fixed rules plus the consult pairs switched on in the draft. */
+function rulesFromConsults(consults) {
+  const out = fixedRulesOf(latest);
+  for (const p of consultPairsOf(latest)) if (consults[pairKey(p)]) out.push({ from: p.a, to: p.b, what: p.what }, { from: p.b, to: p.a, what: p.what });
+  return out;
+}
+/** A guardrail input as a number, or NaN if it isn't a whole number. */
+function guardValue(key) { const raw = draft.guardRaw[key].trim(); return /^\d+$/.test(raw) ? Number(raw) : NaN; }
+/** Validation message for a guardrail input, or null. */
+function guardError(f) {
+  const v = guardValue(f.key);
+  if (isNaN(v)) return "Enter a whole number.";
+  if (v < f.min || v > f.max) return `Use ${fmtNumber(f.min)}–${fmtNumber(f.max)}.`;
+  return null;
+}
+/** Validation message for a personality / "responsible for" text, or null. */
+function textError(text, label) {
+  if (!text.trim()) return `${label} can't be empty.`;
+  if (text.length > TEXT_LIMITS.personality) return `${label} is over ${TEXT_LIMITS.personality} characters.`;
+  return null;
+}
+function sameTools(a, b) { return a.length === b.length && a.every((t) => b.includes(t)); }
+/** True if the draft of a member differs from the latest saved version. */
+function memberChanged(id) {
+  const a = memberOf(latest, id), b = draftMember(id);
+  return !a || a.personality !== b.personality || a.responsibleFor !== b.responsibleFor || !sameTools(a.tools, b.tools) || memberModel(latest, id) !== b.model;
+}
+/** Human-readable list of what the draft changes against the latest saved version. */
+function changes() {
+  if (!draft || !latest) return [];
+  const out = [];
+  for (const id of teamRoles(latest)) {
+    const a = memberOf(latest, id), b = draftMember(id), n = roleInfo(id).name;
+    if (!a || !b) continue;
+    if (a.personality !== b.personality) out.push(`${n}: personality edited`);
+    if (a.responsibleFor !== b.responsibleFor) out.push(`${n}: "responsible for" edited`);
+    const add = b.tools.filter((t) => !a.tools.includes(t)), rem = a.tools.filter((t) => !b.tools.includes(t));
+    for (const t of add) out.push(`${n}: added ${TOOL_LABELS[t] || t}`);
+    for (const t of rem) out.push(`${n}: removed ${TOOL_LABELS[t] || t}`);
+    if (memberModel(latest, id) !== b.model) out.push(`${n}: model ${modelInfo(memberModel(latest, id)).label} → ${modelInfo(b.model).label}`);
+  }
+  for (const p of consultPairsOf(latest)) {
+    const was = consultPairOn(latest.rules, p.a, p.b), now = draft.consults[pairKey(p)];
+    if (was !== now) out.push(`${roleInfo(p.a).name} ↔ ${roleInfo(p.b).name} consult turned ${now ? "on" : "off"}`);
+  }
+  for (const f of GUARDRAIL_FIELDS) {
+    const v = guardValue(f.key);
+    if (!isNaN(v) && v !== latest.guardrails[f.key]) out.push(`${f.label}: ${fmtNumber(latest.guardrails[f.key])} → ${fmtNumber(v)}`);
+  }
+  return out;
+}
+/** Every validation problem in the draft, as "Member: message" lines. */
+function invalid() {
+  if (!draft) return [];
+  const errs = [];
+  for (const m of draft.members) {
+    const n = roleInfo(m.role).name;
+    const e1 = textError(m.personality, "Personality"), e2 = textError(m.responsibleFor, "Responsible for");
+    if (e1) errs.push(`${n}: ${e1}`);
+    if (e2) errs.push(`${n}: ${e2}`);
+  }
+  for (const f of GUARDRAIL_FIELDS) { const e = guardError(f); if (e) errs.push(`${f.label}: ${e}`); }
+  return errs;
+}
+const isDirty = () => !readOnly && changes().length > 0;
+const nextLabel = () => `v${latest.version + 1}`;
+/** The config shown: the viewed version, or the latest with the draft applied. */
+function shownConfig() {
+  if (readOnly) return viewed;
+  const guardrails = {};
+  for (const f of GUARDRAIL_FIELDS) { const v = guardValue(f.key); guardrails[f.key] = isNaN(v) ? latest.guardrails[f.key] : v; }
+  return { ...latest, members: draft.members, rules: rulesFromConsults(draft.consults), guardrails };
+}
+
+// ---------- Loading ----------
+async function boot() {
+  if (!teamId) { showFatal("No team selected. Open a team from the Teams page."); return; }
+  try {
+    const res = await apiGet(`/api/teams/${encodeURIComponent(teamId)}`);
+    if (!res || !res.team || !Array.isArray(res.versions)) throw new Error("Unexpected response from the server.");
+    latest = res.team; versions = res.versions;
+    viewed = latest;
+    if (vParam !== null && vParam !== latest.version) {
+      try { viewed = await apiGet(`/api/teams/${encodeURIComponent(teamId)}/versions/${vParam}`); readOnly = true; }
+      catch (err) {
+        if (err.status === 404) { showFatal(`Version v${vParam} of this team doesn't exist.`, appLink("/team.html", { id: teamId }), "Open the latest version"); return; }
+        throw err;
+      }
+    }
+    draft = draftFrom(latest);
+    const saved = queryParam("saved"), created = queryParam("created");
+    if (saved) flash = `Saved as v${saved}. New runs with this team use it; earlier runs keep the version they used.`;
+    else if (created) flash = `Team created as v1 from the ${templateOf(latest).name} template. Edit it, then save a new version.`;
+    if (saved || created) {
+      const u = new URL(location.href); u.searchParams.delete("saved"); u.searchParams.delete("created"); history.replaceState(null, "", u);
+    }
+    document.title = `${latest.name}${readOnly ? ` v${viewed.version}` : ""} · Team Agents Kit`;
+    render();
+    if (flash) $("status").textContent = flash;
+    loadAgents();
+    // The picker starts with the built-in model list; re-render once the server's list (GET /api/models) arrives.
+    loadModels().then(() => render());
+  } catch (err) {
+    if (err.status === 404) showFatal("This team doesn't exist (it may have been deleted).");
+    else showFatal(`Could not load the team: ${err.message}`, null, null, true);
+  }
+}
+/** Replace the page with an error and a way out (optionally a retry). */
+function showFatal(msg, href, label, retry) {
+  $("head").replaceChildren(h("a", { class: "back", href: appLink("/teams.html") }, "← All teams"));
+  $("save").replaceChildren();
+  $("body").replaceChildren(h("div", { class: "empty-state" },
+    h("div", { class: "notice err", role: "alert", style: "text-align:left" }, icon("warn"), h("span", null, msg)),
+    h("div", { class: "actions", style: "justify-content:center" },
+      retry ? h("button", { type: "button", class: "btn", onClick: () => { $("body").replaceChildren(h("div", { class: "empty-state" }, h("span", { class: "spinner", "aria-hidden": "true" }), "Loading the team…")); boot(); } }, "Try again") : null,
+      h("a", { class: "btn", href: href || appLink("/teams.html") }, label || "All teams"))));
+}
+
+// ---------- Member agents and memory ----------
+/** GET /api/teams/<id>/members: each member's agent with stats and its newest 5 memories. */
+async function loadAgents() {
+  agents = null; agentsError = null; render();
+  try {
+    const list = await apiGet(`/api/teams/${encodeURIComponent(teamId)}/members`);
+    if (!Array.isArray(list)) throw new Error("Unexpected response from the members endpoint.");
+    agents = new Map(list.filter((v) => v && v.role).map((v) => [v.role, v]));
+  } catch (err) {
+    agentsError = err.status === 404 ? "This server doesn't report member agents yet." : err.message;
+  }
+  render();
+}
+/** GET /api/teams/<id>/members/<role>: every memory of one member (after "Show all"). */
+async function loadFull(id) {
+  agentFull.set(id, { loading: true, error: null, view: null }); render();
+  try {
+    const v = await apiGet(`/api/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(id)}`);
+    if (!v || !Array.isArray(v.memories)) throw new Error("Unexpected response.");
+    agentFull.set(id, { loading: false, error: null, view: v });
+    if (agents) agents.set(id, { ...v, memories: v.memories.slice(0, 5) });
+    $("status").textContent = `${roleInfo(id).name}: showing all ${plural(v.memories.length, "memory", "memories")}.`;
+  } catch (err) {
+    agentFull.set(id, { loading: false, error: err.message, view: null });
+  }
+  render();
+}
+/** Switch one member between its newest memories and all of them. */
+function toggleAll(id) {
+  if (agentOpen.has(id)) { agentOpen.delete(id); render(); $("status").textContent = `${roleInfo(id).name}: showing the newest memories.`; return; }
+  agentOpen.add(id);
+  const f = agentFull.get(id);
+  if (!f || f.error) loadFull(id); else render();
+}
+/** DELETE a member's memories (stats and inbox are kept). In fixture mode only this tab's copy is cleared. */
+async function clearMemory(id) {
+  clearBusy = id; clearError.delete(id); render();
+  try {
+    let cleared;
+    if (FIXTURE) { await delay(400); cleared = ((agentFull.get(id) || {}).view || agents.get(id) || { memories: [] }).memories.length; }
+    else {
+      const res = await fetchJSON(`/api/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(id)}/memory`, { method: "DELETE" });
+      cleared = res && typeof res.cleared === "number" ? res.cleared : null;
+    }
+    const v = agents && agents.get(id);
+    if (v) agents.set(id, { ...v, memories: [] });
+    agentFull.delete(id); agentOpen.delete(id);
+    clearAsk = null; clearBusy = null;
+    render();
+    $("status").textContent = `${roleInfo(id).name}'s memory cleared${cleared !== null ? ` (${plural(cleared, "memory", "memories")})` : ""}${FIXTURE ? " (fixture: this tab only)" : ""}. Its stats and inbox are kept.`;
+    const b = document.querySelector(`[data-key="mem-all-${id}"]`) || document.querySelector(`[data-key="edit-${id}"]`) || $(`m-${id}`);
+    if (b) b.focus();
+  } catch (err) {
+    clearBusy = null; clearError.set(id, `Could not clear the memory: ${err.message}`); render();
+  }
+}
+function agentStat(k, v) { return h("div", null, h("dt", null, k), h("dd", null, v)); }
+/** The agent box under a member card: name, stats across runs, memories, and the clear-memory controls. */
+function agentArea(id) {
+  const r = roleInfo(id), name = memberAgentName(teamId, id);
+  const v = agents && agents.get(id);
+  const hid = `ag-${id}`;
+  const box = h("section", { class: "agent-box", "aria-labelledby": hid },
+    h("div", { class: "agent-head" }, h("span", { id: hid, class: "lbl" }, icon("agent"), "Agent"), agentTag(name)),
+    h("p", { class: "explain" }, "Its own Agent (Durable Object) — shared by every run of this team, so it keeps what it learns from one run to the next."));
+  if (agentsError) {
+    box.append(h("p", { class: "small muted", style: "margin:0" }, "Stats and memory unavailable (see the note above the members)."));
+    return box;
+  }
+  if (!agents) {
+    box.append(h("div", { class: "small muted", style: "display:flex;gap:8px;align-items:center" }, h("span", { class: "spinner", "aria-hidden": "true" }), "Loading its stats and memory…"));
+    return box;
+  }
+  if (!v) {
+    box.append(h("p", { class: "small muted", style: "margin:0" }, "This agent hasn't been created yet. It starts with this team's next run."));
+    return box;
+  }
+  const st = v.stats || {};
+  box.append(h("dl", { class: "agent-stats", "aria-label": `${r.name} agent stats, all runs` },
+    agentStat("Runs", fmtNumber(st.runs)), agentStat("Turns", fmtNumber(st.turns)),
+    agentStat("Tokens", fmtNumber((st.inputTokens || 0) + (st.outputTokens || 0))),
+    agentStat("Last active", st.lastActiveAt ? fmtRelative(st.lastActiveAt) : "Never")));
+  append(box, agentMemories(id, v));
+  return box;
+}
+/** "What it remembers": the memory list, its loading/error states, and Show all / Clear memory (with confirmation). */
+function agentMemories(id, v) {
+  const r = roleInfo(id);
+  const out = [];
+  const full = agentFull.get(id);
+  const open = agentOpen.has(id);
+  const mems = open && full && full.view ? full.view.memories : v.memories;
+  const mid = `mem-${id}`;
+  out.push(h("h4", { id: mid, class: "small", style: "margin:4px 0 0;font-weight:600" }, "What it remembers",
+    h("span", { class: "muted", style: "font-weight:400" }, open && full && full.view ? ` · all ${mems.length}` : mems.length ? " · newest first" : "")));
+  if (!mems.length) out.push(h("p", { class: "small muted", style: "margin:0" }, "No memories yet — it learns from review notes and its own reflection after each run."));
+  else out.push(h("ul", { class: "mem-list", "aria-labelledby": mid }, mems.map((m) => memoryItem(m))));
+  if (open && full && full.loading) out.push(h("div", { class: "small muted", role: "status", style: "display:flex;gap:8px;align-items:center" }, h("span", { class: "spinner", "aria-hidden": "true" }), "Loading all memories…"));
+  if (open && full && full.error) out.push(h("div", { class: "notice err", role: "alert" }, icon("warn"), h("span", null, `Could not load all memories: ${full.error}`),
+    h("button", { type: "button", class: "linkbtn", style: "margin-left:auto;min-height:24px;color:inherit", "data-key": `mem-retry-${id}`, onClick: () => loadFull(id) }, "Try again")));
+  const err = clearError.get(id);
+  if (err) out.push(h("div", { class: "notice err", role: "alert" }, icon("warn"), h("span", null, err)));
+  if (clearAsk === id) {
+    const cid = `clear-q-${id}`;
+    out.push(h("div", { class: "confirm-bar", role: "group", "aria-labelledby": cid },
+      h("span", { id: cid }, h("strong", null, `Clear everything ${r.name} remembers?`), " Future runs start without these lessons. Its stats and inbox are kept. This can't be undone."),
+      h("button", { type: "button", class: "btn sm danger", style: "background:#fff", "data-key": `clear-yes-${id}`, disabled: clearBusy === id, onClick: () => clearMemory(id) }, clearBusy === id ? "Clearing…" : "Clear memory"),
+      h("button", { type: "button", class: "btn sm", "data-key": `clear-no-${id}`, disabled: clearBusy === id, onClick: () => { clearAsk = null; render(); const b = document.querySelector(`[data-key="clear-${id}"]`); if (b) b.focus(); } }, "Cancel")));
+  } else {
+    // The list has ≤ 5 memories; there may be more only when it is full.
+    const maybeMore = v.memories.length >= 5 || (full && full.view);
+    out.push(h("div", { class: "actions" },
+      maybeMore ? h("button", { type: "button", class: "btn sm", "data-key": `mem-all-${id}`, "aria-expanded": String(open), "aria-controls": mid, onClick: () => toggleAll(id) }, open ? "Show newest only" : "Show all") : null,
+      v.memories.length ? h("button", { type: "button", class: "btn sm danger", "data-key": `clear-${id}`, onClick: () => { clearAsk = id; clearError.delete(id); render(); const b = document.querySelector(`[data-key="clear-no-${id}"]`); if (b) b.focus(); } }, "Clear memory") : null));
+  }
+  return out;
+}
+
+// ---------- Render ----------
+/** Full re-render of the page from the current state. */
+function render() {
+  if (!latest) return;
+  keepFocus(() => { renderHead(); renderSavePanel(); renderBody(); });
+}
+/** Light refresh while typing: header pill, save button and save panel's change list. */
+function refreshStatus() {
+  keepFocus(renderHead);
+  const list = $("save-changes");
+  if (list) list.replaceChildren(...changeItems());
+  const sb = $("save-submit");
+  if (sb) sb.disabled = saveBusy || !canSubmit();
+}
+
+/** Title, saved/unsaved pill, actions, and the flash / read-only / validation notices. */
+function renderHead() {
+  const dirty = isDirty();
+  const label = readOnly ? `${viewed.versionLabel} · read-only` : dirty ? "Unsaved changes" : `${latest.versionLabel} · saved`;
+  const errs = invalid();
+  const actions = h("div", { class: "actions" });
+  if (readOnly) {
+    actions.append(h("a", { class: "btn", href: appLink("/team.html", { id: teamId }) }, `Open the latest (${latest.versionLabel})`));
+  } else {
+    if (dirty) actions.append(h("button", { type: "button", class: "btn", "data-key": "discard", onClick: discard }, "Discard changes"));
+    const disabled = !dirty || errs.length > 0 || savePanel;
+    actions.append(h("button", {
+      type: "button", class: "btn", "data-key": "save-open", "aria-disabled": String(disabled), "aria-describedby": "save-why", "aria-expanded": String(savePanel),
+      onClick: () => { if (disabled) return; savePanel = true; saveError = null; render(); const n = $("save-note"); if (n) n.focus(); }
+    }, `Save as ${nextLabel()}`),
+    h("span", { id: "save-why", class: "sr-only" }, !dirty ? "Make a change first." : errs.length ? `Fix ${plural(errs.length, "problem")} first.` : "Asks for a change note."));
+  }
+  actions.append(h("a", { class: "btn dark", href: appLink("/new.html", { team: teamId, v: readOnly ? viewed.version : null }), title: dirty ? "Runs use the saved version" : null }, "Start a run"));
+  $("head").replaceChildren(...[h("div", { class: "title-row" },
+    h("div", { class: "stack-6", style: "min-width:0" },
+      h("a", { class: "back", href: appLink("/teams.html") }, "← All teams"),
+      h("div", { class: "title-line" },
+        h("h1", { class: "title lg" }, latest.name),
+        pill(label, readOnly ? "s-neutral" : dirty ? "s-warn" : "s-neutral")),
+      h("p", { class: "sub" }, `Coordinated by the ${roleInfo(coordinatorOf(latest)).name}. Made from the ${templateOf(latest).name} template. Default output: ${outputOf(latest).name}.`)),
+    actions),
+    flash ? h("div", { class: "notice ok", style: "margin-top:16px" }, icon("check"), h("span", null, flash),
+      h("button", { type: "button", class: "linkbtn", style: "margin-left:auto;min-height:24px;color:inherit", "data-key": "flash-x", onClick: () => { flash = null; render(); } }, "Dismiss")) : null,
+    readOnly ? h("div", { class: "notice info", style: "margin-top:16px" }, icon("info"),
+      h("span", null, h("strong", null, `You're viewing ${viewed.versionLabel} (read-only). `), `Saved ${fmtDate(viewed.createdAt)}: "${viewed.note || "No note"}". The latest is ${latest.versionLabel}.`)) : null,
+    !readOnly && dirty && errs.length ? h("div", { class: "notice err", style: "margin-top:16px" }, icon("warn"),
+      h("span", null, h("strong", null, "Fix before saving: "), errs.join(" · "))) : null].filter(Boolean));
+}
+
+function changeItems() { return changes().map((c) => h("li", null, c)); }
+function canSubmit() { return saveNote.trim().length > 0 && saveNote.length <= TEXT_LIMITS.note && isDirty() && !invalid().length; }
+
+/** The "Save as vN" panel: what changes, and the required change note. */
+function renderSavePanel() {
+  if (!savePanel || readOnly) { $("save").replaceChildren(); return; }
+  const over = saveNote.length > TEXT_LIMITS.note;
+  $("save").replaceChildren(h("form", { class: "save-panel", "aria-labelledby": "save-h", novalidate: true, onSubmit: (e) => { e.preventDefault(); save(); } },
+    h("h2", { id: "save-h", class: "h2" }, `Save as ${nextLabel()}`),
+    h("div", { class: "stack-6" }, h("div", { class: "small", style: "font-weight:600" }, "What changes"), h("ul", { id: "save-changes" }, changeItems())),
+    h("div", { class: "field" },
+      h("label", { class: "field-label", for: "save-note", style: "color:var(--text-2)" }, "Change note (required) — shown in the version history"),
+      h("input", { id: "save-note", class: "input", type: "text", maxlength: String(TEXT_LIMITS.note), value: saveNote, autocomplete: "off", "data-key": "save-note",
+        placeholder: changes()[0] || "What did you change and why?", "aria-describedby": "note-count save-err",
+        onInput: (e) => { saveNote = e.target.value; $("note-count").textContent = `${saveNote.length} / ${TEXT_LIMITS.note}`; $("save-submit").disabled = saveBusy || !canSubmit(); } }),
+      h("div", { class: "meta" }, h("span", null, "Earlier runs keep the version they used."), h("span", { id: "note-count", class: over ? "over" : null }, `${saveNote.length} / ${TEXT_LIMITS.note}`))),
+    saveError ? h("div", { id: "save-err", class: "notice err", role: "alert" }, icon("warn"), h("span", null, saveError)) : null,
+    h("div", { class: "actions" },
+      h("button", { id: "save-submit", type: "submit", class: "btn primary", "data-key": "save-submit", disabled: saveBusy || !canSubmit() }, saveBusy ? "Saving…" : `Save ${nextLabel()}`),
+      h("button", { type: "button", class: "btn", "data-key": "save-cancel", disabled: saveBusy, onClick: () => { savePanel = false; saveError = null; render(); const b = document.querySelector('[data-key="save-open"]'); if (b) b.focus(); } }, "Cancel"))));
+}
+
+/** Members and the section plan on the left; rules, guardrails and versions on the right. */
+function renderBody() {
+  const cfg = shownConfig();
+  const main = h("div", { class: "grow", style: "flex:999 1 560px;gap:12px" },
+    h("div", { style: "display:flex;justify-content:space-between;align-items:center;gap:12px" },
+      h("h2", { id: "members-h", class: "h2 lg" }, "Members"),
+      h("span", { class: "small muted" }, `The ${teamRoles(cfg).length} roles come from the ${templateOf(cfg).name} template; edit what each one does.`)),
+    agentsError ? h("div", { class: "notice warn", role: "alert" }, icon("warn"), h("span", null, h("strong", null, "Couldn't load the member agents. "), agentsError),
+      h("button", { type: "button", class: "linkbtn", style: "margin-left:auto;min-height:24px;color:inherit", "data-key": "agents-retry", onClick: loadAgents }, "Try again")) : null,
+    h("section", { "aria-labelledby": "members-h", class: "stack", style: "gap:12px" }, teamRoles(cfg).map((id) => memberCard(cfg, id))),
+    planCard(cfg));
+  const aside = h("aside", { class: "side stack", style: "flex:1 1 360px;gap:16px" }, rulesCard(cfg), guardCard(cfg), versionsCard());
+  $("body").replaceChildren(h("div", { class: "row" }, main, aside));
+}
+
+/** One member: avatar, name, what it does, its model and tools (or the edit form), and its agent box. */
+function memberCard(cfg, id) {
+  const r = roleInfo(id), m = memberOf(cfg, id) || { personality: "", responsibleFor: "", tools: [] };
+  const isEditing = !readOnly && editing.has(id);
+  const changed = !readOnly && memberChanged(id);
+  const big = avatar(id, 48); big.classList.add("lg");
+  const titleRow = h("div", { style: "display:flex;flex-wrap:wrap;align-items:center;gap:8px" },
+    h("h3", { id: `m-${id}` }, r.name),
+    coordinatorOf(cfg) === id ? h("span", { class: "badge-dark" }, "Coordinator") : null,
+    changed ? h("span", { class: "badge-changed" }, "Edited") : null);
+  let body;
+  if (isEditing) body = memberForm(id);
+  else body = [
+    h("div", { class: "line" }, h("span", { class: "k" }, "Personality: "), m.personality || "—"),
+    h("div", { class: "line" }, h("span", { class: "k" }, "Responsible for: "), m.responsibleFor || "—"),
+    h("div", { class: "chips", "aria-label": `${r.name}'s model and tools` }, modelChip(memberModel(cfg, id)), m.tools.length
+      ? m.tools.map((t) => h("span", { class: "tool-chip" }, icon("tool"), TOOL_LABELS[t] || t))
+      : h("span", { class: "tool-chip none" }, "No tools"))];
+  return h("article", { class: "member" + (isEditing ? " editing" : ""), "aria-labelledby": `m-${id}` },
+    big,
+    h("div", { class: "body" }, titleRow, body),
+    readOnly ? null : h("button", {
+      type: "button", class: "editbtn", "data-key": `edit-${id}`, "aria-expanded": String(isEditing), "aria-controls": isEditing ? `form-${id}` : null,
+      "aria-label": isEditing ? `Done editing ${r.name}` : `Edit ${r.name}`,
+      onClick: () => { if (isEditing) editing.delete(id); else editing.add(id); render(); if (!isEditing) { const f = $(`f-${id}-personality`); if (f) f.focus(); } }
+    }, isEditing ? "Done" : "Edit"),
+    agentArea(id));
+}
+
+/** A textarea for one member text (personality or "responsible for") with a counter and inline error. */
+function textField(id, key, label) {
+  const m = draftMember(id);
+  const fid = `f-${id}-${key}`;
+  const err = textError(m[key], label);
+  return h("div", { class: "field" },
+    h("label", { class: "field-label", for: fid }, label),
+    h("textarea", { id: fid, class: "input", rows: "2", maxlength: String(TEXT_LIMITS[key]), "data-key": fid, "aria-describedby": `${fid}-meta ${fid}-err`, "aria-invalid": err ? "true" : "false",
+      onInput: (e) => {
+        m[key] = e.target.value;
+        const e2 = textError(m[key], label);
+        $(`${fid}-count`).textContent = `${m[key].length} / ${TEXT_LIMITS[key]}`;
+        $(`${fid}-err`).textContent = e2 || "";
+        e.target.setAttribute("aria-invalid", e2 ? "true" : "false");
+        refreshStatus();
+      } }, m[key]),
+    h("div", { class: "meta" }, h("span", { id: `${fid}-err`, class: "field-error" }, err || ""), h("span", { id: `${fid}-count`, "aria-hidden": "true" }, `${m[key].length} / ${TEXT_LIMITS[key]}`)),
+    h("span", { id: `${fid}-meta`, class: "sr-only" }, `Up to ${TEXT_LIMITS[key]} characters.`));
+}
+
+/** The model picker: every model in the catalog with its size, plus notes on the chosen one. */
+function modelField(id) {
+  const m = draftMember(id);
+  const fid = `f-${id}-model`;
+  const list = modelCatalog.some((x) => x.id === m.model) ? modelCatalog : [...modelCatalog, modelInfo(m.model)];
+  const info = modelInfo(m.model);
+  const notes = [];
+  if (!info.verified) notes.push(h("li", { class: "warn" }, icon("warn"), h("span", null, "Not yet tested with this app — runs may fail to parse.")));
+  if (info.size === "large") notes.push(h("li", null, "A large model: it uses the free daily allowance faster."));
+  if (!modelCatalog.some((x) => x.id === m.model)) notes.push(h("li", null, "This model is not in the server's list any more; pick another one."));
+  if (info.note) notes.push(h("li", null, info.note));
+  return h("div", { class: "field" },
+    h("label", { class: "field-label", for: fid }, "Model"),
+    h("select", { id: fid, class: "input", "data-key": fid, "aria-describedby": `${fid}-notes`,
+      onChange: (e) => { m.model = e.target.value; render(); } },
+      list.map((x) => h("option", { value: x.id, selected: x.id === m.model },
+        `${x.label}${MODEL_SIZE_LABELS[x.size] ? ` · ${MODEL_SIZE_LABELS[x.size].toLowerCase()}` : ""}${x.id === DEFAULT_MODEL_ID ? " (default)" : ""}`))),
+    h("ul", { id: `${fid}-notes`, class: "model-notes" }, notes));
+}
+
+/** The edit form of one member: texts, model and tools, with hints and a reset to the saved version. */
+function memberForm(id) {
+  const m = draftMember(id), r = roleInfo(id);
+  const allowed = ALLOWED_TOOLS[id] || [];
+  const tools = h("fieldset", { class: "tools" }, h("legend", null, "Tools"),
+    id === "C"
+      ? [h("label", { class: "check disabled" }, h("input", { type: "checkbox", checked: true, disabled: true, "aria-describedby": "critic-only" }), TOOL_LABELS.comment),
+         h("p", { id: "critic-only", class: "small muted", style: "margin:0" }, "The Critic can only comment. It has no tools for making things.")]
+      : allowed.map((t) => h("label", { class: "check" },
+          h("input", { type: "checkbox", checked: m.tools.includes(t), "data-key": `tool-${id}-${t}`,
+            onChange: (e) => { m.tools = e.target.checked ? allowed.filter((x) => x === t || m.tools.includes(x)) : m.tools.filter((x) => x !== t); render(); } }),
+          TOOL_LABELS[t] || t)));
+  const hints = [];
+  if (allowed.includes("github_repo") && !m.tools.includes("github_repo")) hints.push("Without GitHub access, New run hides the code step for this team.");
+  if (m.tools.includes("sample_size")) hints.push(`The ${r.name} can ask the sample-size calculator: plain code computes the numbers (normal approximation), not the model.`);
+  else if (allowed.includes("sample_size")) hints.push(`Without the calculator, the ${r.name} has to estimate sample sizes itself.`);
+  if (m.tools.includes("read_files")) hints.push(`The ${r.name} can read the context files attached to a run.`);
+  const base = memberOf(latest, id);
+  return h("div", { id: `form-${id}`, class: "stack", style: "gap:12px" },
+    textField(id, "personality", "Personality"),
+    textField(id, "responsibleFor", "Responsible for"),
+    modelField(id),
+    tools,
+    hints.length ? h("p", { class: "small muted", style: "margin:0" }, hints.join(" ")) : null,
+    memberChanged(id) && base ? h("div", null, h("button", { type: "button", class: "btn sm", "data-key": `reset-${id}`,
+      onClick: () => { Object.assign(m, draftMemberFrom(latest, id)); render(); } }, `Reset to ${latest.versionLabel}`)) : null);
+}
+
+/** Handoff rules: the fixed ones (locked) and the consult pairs (switches, with the sections each one affects). */
+function rulesCard(cfg) {
+  const who = (x) => x === "*" ? "Everyone" : roleInfo(x).name;
+  const out = outputOf(cfg);
+  const fixed = fixedRulesOf(cfg).map((r) => h("div", { class: "rule" },
+    h("span", { class: "lockic" }, icon("lock")),
+    h("div", { class: "txt" },
+      h("div", null, h("strong", null, who(r.from)), h("span", { class: "muted", "aria-hidden": "true" }, " → "), h("span", { class: "sr-only" }, " to "), h("strong", null, who(r.to))),
+      h("div", { class: "what" }, r.what)),
+    h("span", { class: "sr-only" }, "Always on.")));
+  const pairs = consultPairsOf(cfg).map((p) => {
+    const on = consultPairOn(cfg.rules, p.a, p.b);
+    const secs = pairSections(out.sections, p).map((s) => s.name);
+    const lid = `pair-${pairKey(p)}`;
+    return h("div", { class: "rule" + (on ? "" : " off") },
+      h("div", { class: "txt" },
+        h("div", { id: lid }, h("strong", null, roleInfo(p.a).name), h("span", { class: "muted", "aria-hidden": "true" }, " ↔ "), h("span", { class: "sr-only" }, " and "), h("strong", null, roleInfo(p.b).name)),
+        h("div", { class: "what" }, p.what),
+        h("div", { id: `${lid}-impact`, class: "impact " + (on ? "muted" : "lost") }, !secs.length ? `No ${out.name} section consults along this pair; agents can still ask each other.` : on ? `Used by ${andList(secs)}.` : `${andList(secs)} ${secs.length > 1 ? "lose their" : "loses its"} consult.`)),
+      readOnly
+        ? pill(on ? "On" : "Off", on ? "s-ok" : "s-neutral", { sm: true })
+        : h("button", { type: "button", class: "switch", role: "switch", "aria-checked": String(on), "aria-labelledby": lid, "aria-describedby": `${lid}-impact`, "data-key": `sw-${pairKey(p)}`,
+            onClick: () => { draft.consults[pairKey(p)] = !draft.consults[pairKey(p)]; render(); } }));
+  });
+  return h("section", { class: "side-card", "aria-labelledby": "rules-h" },
+    h("h2", { id: "rules-h" }, "Handoff rules"),
+    h("p", { class: "small muted", style: "margin:0" }, "Agents can only send work along these connections."),
+    h("h3", { class: "eyebrow", style: "margin-top:4px" }, "Always on"),
+    fixed,
+    h("h3", { class: "eyebrow", style: "margin-top:8px" }, "Consults between specialists"),
+    h("p", { class: "small muted", style: "margin:0" }, "Two-way: each lets a section's writer ask the other for input."),
+    pairs);
+}
+
+/** Guardrail inputs (or values, read-only) with their allowed ranges. */
+function guardCard(cfg) {
+  const rows = GUARDRAIL_FIELDS.map((f) => {
+    const id = `g-${f.key}`;
+    if (readOnly) return h("div", { class: "guard" }, h("span", { class: "k" }, f.label), h("span", { class: "v tabular" }, `${fmtNumber(cfg.guardrails[f.key])} ${f.unit}`));
+    const err = guardError(f);
+    return h("div", { class: "guard" },
+      h("label", { for: id }, f.label),
+      h("input", { id, class: "input", type: "number", inputmode: "numeric", min: String(f.min), max: String(f.max), step: String(f.step), value: draft.guardRaw[f.key], "data-key": id,
+        "aria-describedby": `${id}-hint ${id}-err`, "aria-invalid": err ? "true" : "false",
+        onInput: (e) => {
+          draft.guardRaw[f.key] = e.target.value;
+          const e2 = guardError(f);
+          $(`${id}-err`).textContent = e2 || "";
+          e.target.setAttribute("aria-invalid", e2 ? "true" : "false");
+          refreshStatus();
+        } }),
+      h("span", { id: `${id}-hint`, class: "hint" }, `${f.hint}. ${fmtNumber(f.min)}–${fmtNumber(f.max)} ${f.unit}.`),
+      h("span", { id: `${id}-err`, class: "field-error" }, err || ""));
+  });
+  return h("section", { class: "side-card", "aria-labelledby": "guard-h" },
+    h("h2", { id: "guard-h" }, "Guardrails"),
+    h("p", { class: "small muted", style: "margin:0" }, "Runs are autonomous once approved, so these decide when a run stops."),
+    h("div", null, rows,
+      h("div", { class: "guard" }, h("span", { class: "k" }, "Unanswered questions go to"), h("span", { class: "v" }, "Open questions"))));
+}
+
+/** Version history, newest first, with links to open each version. */
+function versionsCard() {
+  const shownV = readOnly ? viewed.version : latest.version;
+  return h("section", { class: "side-card", "aria-labelledby": "ver-h" },
+    h("h2", { id: "ver-h" }, "Version history"),
+    isDirty() ? h("p", { class: "small", style: "margin:0;color:var(--warn-fg)" }, "Opening another version discards your unsaved changes.") : null,
+    versions.length ? h("ol", { class: "vlist" }, versions.map((v) => h("li", null,
+      h("a", { href: appLink("/team.html", { id: teamId, v: v.version === latest.version ? null : v.version }), "aria-current": v.version === shownV ? "page" : null },
+        h("span", { class: "vn" }, v.versionLabel || `v${v.version}`),
+        h("span", { style: "min-width:0;flex:1" },
+          h("span", { style: "display:block;overflow-wrap:anywhere" }, v.note || "No note",
+            v.version === latest.version ? h("span", { class: "pill sm s-chip", style: "margin-left:6px" }, "Latest") : null),
+          h("span", { class: "when", style: "display:block" }, `${fmtDate(v.createdAt)} · ${plural(v.runCount || 0, "run")}`))))))
+      : h("p", { class: "small muted", style: "margin:0" }, "No versions recorded."),
+    h("a", { href: appLink("/runs.html", { team: teamId }), class: "small", style: "font-weight:600;margin-top:4px" }, "See this team's runs →"));
+}
+
+/** The output's section plan under the current rules, flagging sections that lose a consult. */
+function planCard(cfg) {
+  const lost = [];
+  const out = outputOf(cfg);
+  const rows = out.sections.map((s) => {
+    const eff = effectiveConsults(s, cfg.rules);
+    const gone = s.consults.filter((r) => !eff.includes(r));
+    if (gone.length) lost.push(`${s.name} (${roleInfo(s.owner).name} ↔ ${listNames(gone)})`);
+    const consult = s.consults.length === 0 ? h("span", { class: "muted" }, "—")
+      : h("span", null, eff.length ? listNames(eff) : null,
+          gone.length ? h("span", { class: "lost" }, h("s", null, listNames(gone)), " consult off") : null);
+    const tools = memberTools(cfg, s.owner);
+    return h("div", { class: "plan-row", role: "row" },
+      h("div", { role: "cell", style: "font-weight:600" }, s.name),
+      h("div", { role: "cell", class: "who", title: tools.map((t) => TOOL_LABELS[t] || t).join(", ") }, avatar(s.owner, 22, 10), roleInfo(s.owner).name),
+      h("div", { role: "cell" }, consult));
+  });
+  return h("section", { class: "card p18", "aria-labelledby": "plan-h", style: "margin-top:8px" },
+    h("h2", { id: "plan-h", class: "h2" }, `${out.name} with these rules`),
+    h("p", { class: "small muted", style: "margin:0" }, `Section writers are fixed by the ${out.name} template. A consult only happens if the handoff rules allow it both ways.`),
+    lost.length ? h("div", { class: "notice warn" }, icon("warn"), h("span", null, h("strong", null, `${plural(lost.length, "section")} ${lost.length > 1 ? "lose" : "loses"} a consult: `), lost.join(", "), ".")) : null,
+    h("div", { role: "table", "aria-label": "Section plan" },
+      h("div", { class: "plan-row head", role: "row" }, h("div", { role: "columnheader" }, "Section"), h("div", { role: "columnheader" }, "Written by"), h("div", { role: "columnheader" }, "Consults")),
+      rows));
+}
+
+// ---------- Actions ----------
+/** Throw the draft away and go back to the latest saved version. */
+function discard() {
+  draft = draftFrom(latest); editing.clear(); savePanel = false; saveNote = ""; saveError = null;
+  $("status").textContent = "Changes discarded.";
+  render();
+}
+/** POST the draft as a new version. Every member is sent with its model (the default model is sent explicitly too). */
+async function save() {
+  if (!canSubmit()) { saveError = saveNote.trim() ? "Nothing to save, or a field needs fixing." : "Write a change note first."; render(); const n = $("save-note"); if (n) n.focus(); return; }
+  const guardrails = {};
+  for (const f of GUARDRAIL_FIELDS) guardrails[f.key] = guardValue(f.key);
+  const body = {
+    note: saveNote.trim(),
+    members: draft.members.map((m) => ({ role: m.role, personality: m.personality.trim(), responsibleFor: m.responsibleFor.trim(), tools: m.tools.slice(), model: m.model })),
+    consultRules: consultPairsOf(latest).filter((p) => draft.consults[pairKey(p)]).map((p) => ({ a: p.a, b: p.b, what: p.what })),
+    guardrails
+  };
+  saveBusy = true; saveError = null; render();
+  try {
+    if (FIXTURE) {
+      await delay(400);
+      const v = latest.version + 1;
+      latest = { ...latest, version: v, versionLabel: `v${v}`, note: body.note, createdAt: new Date().toISOString(), members: body.members, rules: rulesFromConsults(draft.consults), guardrails };
+      versions = [{ version: v, versionLabel: `v${v}`, note: body.note, createdAt: latest.createdAt, runCount: 0 }, ...versions];
+      viewed = latest; draft = draftFrom(latest); editing.clear(); savePanel = false; saveNote = ""; saveBusy = false;
+      flash = `Saved as v${v} (fixture: kept in this tab only).`;
+      render(); $("status").textContent = flash;
+      return;
+    }
+    const cfg = await postJSON(`/api/teams/${encodeURIComponent(teamId)}/versions`, body);
+    if (!cfg || typeof cfg.version !== "number") throw new Error("The server did not return the new version.");
+    location.href = appLink("/team.html", { id: teamId, saved: cfg.version });
+  } catch (err) {
+    saveBusy = false; saveError = `Could not save: ${err.message}`; render();
+  }
+}
+
+boot();
+</script>
+</body>
+</html>

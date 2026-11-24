@@ -1,0 +1,232 @@
+{
+  "agentName": "ux-research--MS",
+  "teamId": "ux-research",
+  "role": "MS",
+  "stats": {
+    "runs": 2,
+    "turns": 9,
+    "inputTokens": 20240,
+    "outputTokens": 4250,
+    "lastActiveAt": "2026-11-24T11:44:04.500Z"
+  },
+  "memories": [
+    {
+      "id": 9,
+      "kind": "lesson",
+      "text": "Stating assignment and the control in the first draft got Sample and controls approved first time; keep doing it.",
+      "runId": "r_labsecond_onboard02",
+      "teamVersion": 2,
+      "sectionId": null,
+      "createdAt": "2026-11-24T11:44:04.500Z"
+    },
+    {
+      "id": 8,
+      "kind": "outcome",
+      "text": "Sample and controls: approved first time. Participants: every new sign-up on iOS and Android during the test; existing users and staff accounts are excluded.",
+      "runId": "r_labsecond_onboard02",
+      "teamVersion": 2,
+      "sectionId": "sample",
+      "createdAt": "2026-11-24T11:42:41.600Z"
+    },
+    {
+      "id": 7,
+      "kind": "outcome",
+      "text": "Method: approved first time. Design: randomised A/B test, between-subjects, 1:1 allocation at first launch.",
+      "runId": "r_labsecond_onboard02",
+      "teamVersion": 2,
+      "sectionId": "method",
+      "createdAt": "2026-11-24T11:42:12.850Z"
+    },
+    {
+      "id": 6,
+      "kind": "outcome",
+      "text": "Variables: approved first time. Independent: onboarding checklist shown (treatment) or not shown (control), set by the feature flag at first launch.",
+      "runId": "r_labsecond_onboard02",
+      "teamVersion": 2,
+      "sectionId": "variables",
+      "createdAt": "2026-11-24T11:41:43.150Z"
+    },
+    {
+      "id": 5,
+      "kind": "lesson",
+      "text": "Sample and controls: state the randomisation unit, how reinstalls are handled and the control condition in the first draft.",
+      "runId": "r_labcompleted_onboard01",
+      "teamVersion": 2,
+      "sectionId": null,
+      "createdAt": "2026-11-24T09:16:26.800Z"
+    },
+    {
+      "id": 4,
+      "kind": "outcome",
+      "text": "Sample and controls: approved after 2 rounds. Participants: every new sign-up on iOS and Android during the test; existing users and staff accounts are excluded.",
+      "runId": "r_labcompleted_onboard01",
+      "teamVersion": 2,
+      "sectionId": "sample",
+      "createdAt": "2026-11-24T09:15:03.900Z"
+    },
+    {
+      "id": 3,
+      "kind": "lesson",
+      "text": "Sample and controls: Assignment isn't described: say how new users are randomised and what happens to users who reinstall. The control condition is named but not defined.",
+      "runId": "r_labcompleted_onboard01",
+      "teamVersion": 2,
+      "sectionId": "sample",
+      "createdAt": "2026-11-24T09:14:41.600Z"
+    },
+    {
+      "id": 2,
+      "kind": "outcome",
+      "text": "Method: approved first time. Design: randomised A/B test, between-subjects, 1:1 allocation at first launch.",
+      "runId": "r_labcompleted_onboard01",
+      "teamVersion": 2,
+      "sectionId": "method",
+      "createdAt": "2026-11-24T09:14:12.850Z"
+    },
+    {
+      "id": 1,
+      "kind": "outcome",
+      "text": "Variables: approved first time. Independent: onboarding checklist shown (treatment) or not shown (control), set by the feature flag at first launch.",
+      "runId": "r_labcompleted_onboard01",
+      "teamVersion": 2,
+      "sectionId": "variables",
+      "createdAt": "2026-11-24T09:13:43.150Z"
+    }
+  ],
+  "recentInbox": [
+    {
+      "id": 15,
+      "runId": "r_labsecond_onboard02",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 22,
+      "createdAt": "2026-11-24T11:42:41.600Z"
+    },
+    {
+      "id": 14,
+      "runId": "r_labsecond_onboard02",
+      "from": "DA",
+      "kind": "answer",
+      "text": "961 per group (1922 in total) to detect 30% → 36% at α 0.05 with 80% power, two-sided.",
+      "spanId": 20,
+      "createdAt": "2026-11-24T11:42:21.300Z"
+    },
+    {
+      "id": 13,
+      "runId": "r_labsecond_onboard02",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 17,
+      "createdAt": "2026-11-24T11:42:12.850Z"
+    },
+    {
+      "id": 12,
+      "runId": "r_labsecond_onboard02",
+      "from": "ER",
+      "kind": "answer",
+      "text": "Low risk: the control group keeps today's onboarding. Let treatment users dismiss the checklist, and don't collect anything extra.",
+      "spanId": 15,
+      "createdAt": "2026-11-24T11:41:51.450Z"
+    },
+    {
+      "id": 11,
+      "runId": "r_labsecond_onboard02",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 13,
+      "createdAt": "2026-11-24T11:41:43.150Z"
+    },
+    {
+      "id": 10,
+      "runId": "r_labsecond_onboard02",
+      "from": "DA",
+      "kind": "answer",
+      "text": "Count a user as retained if they open the app on any day 2–7 after sign-up, from the analytics events table, in their local time.",
+      "spanId": 11,
+      "createdAt": "2026-11-24T11:41:22.850Z"
+    },
+    {
+      "id": 9,
+      "runId": "r_labsecond_onboard02",
+      "from": "PI",
+      "kind": "assign",
+      "text": "Section tasks: Variables, Method, Sample and controls.",
+      "spanId": 4,
+      "createdAt": "2026-11-24T11:40:58.100Z"
+    },
+    {
+      "id": 8,
+      "runId": "r_labcompleted_onboard01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved.",
+      "spanId": 24,
+      "createdAt": "2026-11-24T09:15:03.900Z"
+    },
+    {
+      "id": 7,
+      "runId": "r_labcompleted_onboard01",
+      "from": "C",
+      "kind": "review",
+      "text": "Sent back to Methods specialist: Assignment isn't described: say how new users are randomised and what happens to users who reinstall. The control condition is named but not defined.",
+      "spanId": 22,
+      "createdAt": "2026-11-24T09:14:41.600Z"
+    },
+    {
+      "id": 6,
+      "runId": "r_labcompleted_onboard01",
+      "from": "DA",
+      "kind": "answer",
+      "text": "961 per group (1922 in total) to detect 30% → 36% at α 0.05 with 80% power, two-sided.",
+      "spanId": 20,
+      "createdAt": "2026-11-24T09:14:21.300Z"
+    },
+    {
+      "id": 5,
+      "runId": "r_labcompleted_onboard01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 17,
+      "createdAt": "2026-11-24T09:14:12.850Z"
+    },
+    {
+      "id": 4,
+      "runId": "r_labcompleted_onboard01",
+      "from": "ER",
+      "kind": "answer",
+      "text": "Low risk: the control group keeps today's onboarding. Let treatment users dismiss the checklist, and don't collect anything extra.",
+      "spanId": 15,
+      "createdAt": "2026-11-24T09:13:51.450Z"
+    },
+    {
+      "id": 3,
+      "runId": "r_labcompleted_onboard01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 13,
+      "createdAt": "2026-11-24T09:13:43.150Z"
+    },
+    {
+      "id": 2,
+      "runId": "r_labcompleted_onboard01",
+      "from": "DA",
+      "kind": "answer",
+      "text": "Count a user as retained if they open the app on any day 2–7 after sign-up, from the analytics events table, in their local time.",
+      "spanId": 11,
+      "createdAt": "2026-11-24T09:13:22.850Z"
+    },
+    {
+      "id": 1,
+      "runId": "r_labcompleted_onboard01",
+      "from": "PI",
+      "kind": "assign",
+      "text": "Section tasks: Variables, Method, Sample and controls.",
+      "spanId": 4,
+      "createdAt": "2026-11-24T09:12:58.100Z"
+    }
+  ]
+}

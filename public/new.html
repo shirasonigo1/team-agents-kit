@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New run · Team Agents Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+<style>
+  .out-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .out-card { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; text-align: left; border-radius: 14px; border: 2px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; font: inherit; min-width: 0; }
+  .out-card:hover:not(:disabled) { border-color: var(--accent); }
+  .out-card[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-softer); }
+  .out-card:disabled { cursor: not-allowed; background: var(--well); border-style: dashed; }
+  .out-card .radio { width: 20px; height: 20px; border-radius: 999px; border: 2px solid var(--border); background: #fff; box-shadow: inset 0 0 0 3px #fff; flex-shrink: 0; }
+  .out-card[aria-pressed="true"] .radio { border-color: var(--accent); background: var(--accent); }
+  .out-card .secs { font-size: 13px; color: var(--muted); }
+  .out-card .none { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .sec-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .sec-chips li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; border-radius: 999px; background: #fff; border: 1px solid var(--border); font-size: 13px; }
+  .team-line { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  select.input { padding-right: 32px; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="left">
+    <a class="brand" href="/teams.html">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#18181B" stroke-width="2" aria-hidden="true"><circle cx="14" cy="6" r="3.5"/><circle cx="6" cy="21" r="3.5"/><circle cx="22" cy="21" r="3.5"/><path d="M12.3 9 7.7 18M15.7 9l4.6 9M9.5 21h9"/></svg>
+      Team Agents Kit</a>
+    <nav class="main-nav" aria-label="Main"><a href="/teams.html">Teams</a><a href="/runs.html" aria-current="page">Runs</a></nav>
+  </div>
+  <div class="right"><a class="signout" href="/logout">Sign out</a></div>
+</header>
+
+<main class="page narrow">
+  <div>
+    <h1 class="title lg">New run</h1>
+    <p class="sub" style="margin-top:4px">Choose what you need, pick a team and describe the task. The coordinator drafts a brief for you to approve before anything runs.</p>
+  </div>
+
+  <form id="form" class="row" novalidate>
+    <div class="grow">
+      <section class="card" aria-labelledby="out-h">
+        <h2 id="out-h" class="h2 plain"><span class="step"></span>What should the team produce?</h2>
+        <p class="small muted" style="margin:0" id="out-help">Each team produces one kind of document, so choosing a team decides the output. Picking an output here picks a team that makes it.</p>
+        <div id="outputs" class="out-grid" role="group" aria-labelledby="out-h" aria-describedby="out-help"></div>
+        <div id="out-detail" class="stack-6" style="gap:8px">
+          <div class="small" style="font-weight:600" id="sections-h">Sections and who writes them</div>
+          <ul id="sections" class="sec-chips" aria-labelledby="sections-h"></ul>
+        </div>
+        <div id="out-missing"></div>
+      </section>
+
+      <section class="card" aria-labelledby="team-h">
+        <h2 id="team-h" class="h2 plain"><span class="step"></span>Which team?</h2>
+        <label class="field-label" for="team-select">Team and version</label>
+        <select id="team-select" class="input" disabled aria-describedby="team-info"><option>Loading teams…</option></select>
+        <div id="team-info" class="stack" style="gap:10px"></div>
+        <div id="live-out" role="status" class="sr-only"></div>
+      </section>
+
+      <section class="card" id="code-card" aria-labelledby="code-h" hidden>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+          <h2 id="code-h" class="h2 plain"><span class="step"></span>Code for this project</h2>
+          <span class="pill sm s-neutral">Optional</span>
+        </div>
+        <p class="small muted" style="margin:0;font-size:14px" id="code-help">Point the Engineer at a public GitHub repository. It reads the code (read-only) to check feasibility, effort and risks.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start">
+          <div style="flex:3 1 260px;display:flex;flex-direction:column;gap:6px">
+            <label class="field-label" for="repo">GitHub repository (owner/name)</label>
+            <div class="input-wrap"><span id="repo-icon"></span>
+              <input id="repo" name="repo" type="text" placeholder="owner/repository" autocomplete="off" spellcheck="false" aria-describedby="repo-err">
+            </div>
+            <span id="repo-err" class="field-error" hidden></span>
+          </div>
+          <div style="flex:1 1 140px;display:flex;flex-direction:column;gap:6px">
+            <label class="field-label" for="branch">Branch</label>
+            <input id="branch" name="branch" class="input" type="text" value="main" autocomplete="off" spellcheck="false">
+          </div>
+        </div>
+        <div id="eng-mode"></div>
+      </section>
+
+      <section class="card" aria-labelledby="task-h">
+        <h2 id="task-h" class="h2 plain"><span class="step"></span>Describe the task</h2>
+        <label class="field-label" for="task">What should the team work on? Include goals, constraints and deadlines.</label>
+        <textarea id="task" name="task" class="input" rows="5" required maxlength="4000" aria-describedby="task-err"></textarea>
+        <span id="task-err" class="field-error" hidden></span>
+        <label class="field-label" for="title">Run title (optional — otherwise the coordinator names the run)</label>
+        <input id="title" name="title" class="input" type="text" placeholder="e.g. Offline mode launch plan" maxlength="120">
+
+        <div id="drop" class="dropzone" role="group" aria-labelledby="files-h">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+            <h3 id="files-h" style="font-size:15px;font-weight:600">Context files</h3>
+            <span class="pill sm s-neutral">Optional</span>
+          </div>
+          <p class="small muted" style="margin:0" id="files-help">PDF, Word (.docx), Excel (.xlsx), CSV, text, Markdown or HTML · up to 5 files · 2 MB each. The text is extracted when you add a file.</p>
+          <ul id="file-list" class="file-list" aria-label="Attached files"></ul>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+            <input id="file-input" type="file" multiple hidden accept=".pdf,.docx,.xlsx,.csv,.txt,.md,.html,.htm">
+            <button id="add-files" type="button" class="btn dashed" aria-describedby="files-help"></button>
+            <span class="small muted">or drop files here</span>
+          </div>
+          <div id="files-note"></div>
+          <div id="file-status" role="status" class="sr-only"></div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="card side" aria-labelledby="sum-h">
+      <h2 id="sum-h" class="h2">Summary</h2>
+      <dl class="facts">
+        <div><dt>Output</dt><dd id="sum-output">—</dd></div>
+        <div><dt>Sections</dt><dd id="sum-sections">8</dd></div>
+        <div><dt>Team</dt><dd id="sum-team">—</dd></div>
+        <div><dt>Coordinator</dt><dd id="sum-coord">—</dd></div>
+        <div><dt>Models</dt><dd id="sum-models">—</dd></div>
+        <div id="sum-code-row"><dt>Code</dt><dd id="sum-code">None (technical Q&amp;A only)</dd></div>
+        <div><dt>Context files</dt><dd id="sum-files">None</dd></div>
+        <div><dt>Token budget</dt><dd id="sum-budget">—</dd></div>
+        <div><dt>Turn limit</dt><dd id="sum-turns">—</dd></div>
+      </dl>
+      <p class="notice info" id="sum-note">Nothing runs yet. The coordinator drafts a brief and a section plan, and you approve it first.</p>
+      <div id="error" class="notice err" role="alert" hidden></div>
+      <button id="submit" class="btn primary tall block" type="submit">Draft the brief</button>
+    </aside>
+  </form>
+</main>
+<footer class="site-footer"><span>Team Agents Kit</span><a href="/plumbing.html">Plumbing check</a></footer>
+
+<script src="/app.js"></script>
+<script>
+"use strict";
+// New run: pick the output (which picks a team), the team version, optional code and context files, and the task.
+// Submitting POSTs /api/runs; the run starts by drafting a brief that the user approves on the run page.
+const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+$("repo-icon").replaceWith(icon("code"));
+$("add-files").append(icon("upload"), "Add context files");
+// ---------- Output ----------
+const DEFAULT_TASKS = {
+  "work-plan": "Plan the launch of offline mode for our field-notes app. Target: beta by end of Q1. The team is 4 engineers and 1 designer.",
+  "lab-experiment": "Design an experiment to test whether an onboarding checklist increases week-1 retention of our note-taking app."
+};
+const TITLE_HINTS = { "work-plan": "e.g. Offline mode launch plan", "lab-experiment": "e.g. Onboarding checklist experiment" };
+let selOutput = queryParam("output") && OUTPUTS[queryParam("output")] ? queryParam("output") : TEMPLATES[DEFAULT_TEMPLATE].outputId;
+/** Swap the example task when the output changes, unless the user has written their own. */
+function syncTask() {
+  const t = $("task");
+  if (!t.value.trim() || Object.values(DEFAULT_TASKS).includes(t.value)) t.value = DEFAULT_TASKS[selOutput] || "";
+  $("title").placeholder = TITLE_HINTS[selOutput] || "";
+}
+const teamsFor = (outId) => (teams || []).filter((t) => outputIdOf(t) === outId);
+
+/** The output cards (disabled when no team makes that output) and the chosen output's sections. */
+function renderOutputs() {
+  const usable = teams && !teamsError;
+  keepFocus(() => {
+    $("outputs").replaceChildren(...Object.values(OUTPUTS).map((o) => {
+      const on = o.id === selOutput;
+      const has = usable ? teamsFor(o.id).length > 0 : on;
+      return h("button", { type: "button", class: "out-card", "aria-pressed": String(on), disabled: !has && !on, "data-key": `out-${o.id}`,
+        "aria-describedby": has ? null : `out-none-${o.id}`, onClick: () => pickOutput(o.id) },
+        h("span", { style: "display:flex;justify-content:space-between;width:100%;align-items:center;gap:8px" },
+          h("span", { class: "num", style: "font-size:18px;font-weight:700" }, o.name),
+          h("span", { class: "radio", "aria-hidden": "true" })),
+        h("span", { class: "secs" }, o.sections.map((x) => x.name).join(" · ")),
+        has ? null : h("span", { id: `out-none-${o.id}`, class: "none" }, usable ? "No team makes this yet" : "Teams could not be loaded"));
+    }));
+  });
+  const out = OUTPUTS[selOutput];
+  $("sections").replaceChildren(...out.sections.map((x) => h("li", null, avatar(x.owner, 20, 9), x.name, h("span", { class: "sr-only" }, ` (written by ${roleInfo(x.owner).name})`))));
+  $("sum-sections").textContent = String(out.sections.length);
+  $("sum-output").textContent = out.name;
+  const missing = usable ? Object.values(OUTPUTS).filter((o) => !teamsFor(o.id).length) : [];
+  $("out-missing").replaceChildren(...missing.map((o) => h("p", { class: "small muted", style: "margin:0" },
+    `To produce a ${o.name.toLowerCase()}, `, h("a", { href: appLink("/teams.html") }, `create a team from the ${templateForOutput(o.id).name} template`), ".")));
+}
+/** Choose an output: switches to a team that produces it. */
+function pickOutput(id) {
+  if (id === selOutput) return;
+  const list = teamsFor(id);
+  if (!list.length) return;
+  selOutput = id;
+  const t = list.find((x) => x.teamId === selTeam) || list[0];
+  selTeam = t.teamId; selVersion = t.version;
+  syncTask();
+  $("live-out").textContent = `Output: ${OUTPUTS[id].name}. Team switched to ${t.name}.`;
+  loadConfig();
+}
+
+// ---------- Team ----------
+let teams = null;          // TeamSummary[] | null (null = not loaded / failed)
+let teamsError = null;
+let selTeam = queryParam("team");
+let selVersion = null;     // number; latest unless ?v= picked an older one
+const wantV = queryParam("v") && /^\d+$/.test(queryParam("v")) ? Number(queryParam("v")) : null;
+let cfg = null;            // TeamConfig of the selected team version
+let cfgError = null;
+let cfgLoading = false;
+const cfgCache = new Map();
+
+/** GET /api/teams and select the team from ?team= / ?output=, else the squad or the first team. */
+async function loadTeams() {
+  teamsError = null; teams = null; renderTeam();
+  try {
+    const list = await apiGet("/api/teams");
+    if (!Array.isArray(list)) throw new Error("Unexpected response from /api/teams.");
+    teams = list;
+    if (!teams.some((t) => t.teamId === selTeam)) selTeam = (teams.find((t) => t.teamId === "squad") || teams[0] || {}).teamId || null;
+    if (!queryParam("team") && queryParam("output") && teamsFor(queryParam("output")).length) selTeam = teamsFor(queryParam("output"))[0].teamId;
+    const t = teams.find((x) => x.teamId === selTeam);
+    selVersion = t ? (wantV && selTeam === queryParam("team") && wantV <= t.version ? wantV : t.version) : null;
+    if (t) { selOutput = outputIdOf(t); syncTask(); }
+    await loadConfig();
+  } catch (err) {
+    teamsError = err.message; cfg = legacyTeamConfig(null); selOutput = outputIdOf(cfg); syncTask(); renderTeam();
+  }
+}
+/** Load the selected team version's TeamConfig (cached per team@version). */
+async function loadConfig() {
+  const t = teams && teams.find((x) => x.teamId === selTeam);
+  if (!t) { cfg = null; renderTeam(); return; }
+  const key = `${t.teamId}@${selVersion}`;
+  cfgError = null;
+  if (cfgCache.has(key)) { cfg = cfgCache.get(key); renderTeam(); return; }
+  cfgLoading = true; renderTeam();
+  try {
+    const res = selVersion === t.version
+      ? (await apiGet(`/api/teams/${encodeURIComponent(t.teamId)}`)).team
+      : await apiGet(`/api/teams/${encodeURIComponent(t.teamId)}/versions/${selVersion}`);
+    if (!res || !Array.isArray(res.members)) throw new Error("Unexpected team response.");
+    cfgCache.set(key, res);
+    if (selTeam === t.teamId) { cfg = res; if (outputIdOf(res) !== selOutput) { selOutput = outputIdOf(res); syncTask(); } }
+  } catch (err) {
+    cfgError = err.message; cfg = null;
+  }
+  cfgLoading = false; renderTeam();
+}
+
+// Each member is its own agent with memory from this team's earlier runs (GET /api/teams/<id>/members).
+const agentLists = new Map(); // teamId → { loading, error, list }
+/** Each member's agent for a team, loaded once; re-renders when it arrives. */
+function loadAgentList(teamId) {
+  if (agentLists.has(teamId)) return agentLists.get(teamId);
+  const e = { loading: true, error: null, list: null };
+  agentLists.set(teamId, e);
+  apiGet(`/api/teams/${encodeURIComponent(teamId)}/members`)
+    .then((list) => { if (!Array.isArray(list)) throw new Error("Unexpected response."); e.list = list; })
+    .catch((err) => { e.error = err.message; })
+    .finally(() => { e.loading = false; if (selTeam === teamId) renderTeam(); });
+  return e;
+}
+/** How many memories each member brings into this run. */
+function agentsNote(teamId) {
+  const e = loadAgentList(teamId);
+  const note = h("p", { class: "small muted", style: "margin:0", id: "agents-note" }, "Each member is its own agent and brings what it learned from this team's earlier runs.");
+  if (!e.list) return note;
+  const byRole = new Map(e.list.map((v) => [v.role, v]));
+  const counts = teamRoles(cfg).map((id) => {
+    const v = byRole.get(id);
+    const n = !v ? 0 : typeof v.memoryCount === "number" ? v.memoryCount : (v.memories || []).length;
+    // The list carries at most 5 memories per member: a full list may mean more.
+    const label = v && typeof v.memoryCount !== "number" && n >= 5 ? "5+" : String(n);
+    return h("li", { class: "who", title: v ? v.agentName : null }, avatar(id, 20, 9), h("span", null, h("span", { class: "sr-only" }, `${roleInfo(id).name}: `), `${label} ${n === 1 && label === "1" ? "memory" : "memories"}`));
+  });
+  const total = e.list.reduce((a, v) => a + (v.memories || []).length, 0);
+  return h("div", { class: "stack-6", style: "gap:6px" }, note,
+    total ? h("ul", { class: "chips", "aria-label": "Memories each member brings", style: "list-style:none;margin:0;padding:0;gap:12px;font-size:13px;color:var(--text-2)" }, counts)
+      : h("p", { class: "xs muted", style: "margin:0" }, "No memories yet: this is the team's first run with agent memory."));
+}
+
+function githubRoles() { return cfg ? whoHasTool(cfg, "github_repo") : []; }
+function hasGithub() { return githubRoles().length > 0; }
+function readers() { return cfg ? whoHasTool(cfg, "read_files") : []; }
+
+/** The team picker (grouped by output) and the chosen team's summary, or the loading / error / empty states. */
+function renderTeam() {
+  const sel = $("team-select");
+  const info = $("team-info");
+  if (teamsError) {
+    sel.disabled = true;
+    sel.replaceChildren(h("option", null, "Default team (Mobile Product Squad)"));
+    info.replaceChildren(h("div", { class: "notice err", role: "alert" }, icon("warn"),
+      h("span", null, h("strong", null, "Could not load teams. "), teamsError, " The run will use the default team."),
+      h("button", { type: "button", class: "linkbtn", style: "margin-left:auto;min-height:24px;color:inherit", onClick: loadTeams }, "Try again")));
+  } else if (!teams) {
+    sel.disabled = true;
+    sel.replaceChildren(h("option", null, "Loading teams…"));
+    info.replaceChildren(h("div", { class: "small muted", style: "display:flex;gap:8px;align-items:center" }, h("span", { class: "spinner", "aria-hidden": "true" }), "Loading teams…"));
+  } else if (!teams.length) {
+    sel.disabled = true;
+    sel.replaceChildren(h("option", null, "No teams yet"));
+    info.replaceChildren(h("div", { class: "notice warn" }, icon("info"), h("span", null, "No saved teams yet. ", h("a", { href: appLink("/teams.html") }, "Create one from the template"), ", or run with the default team.")));
+  } else {
+    sel.disabled = false;
+    // Grouped by the output each team produces: choosing a team decides the output.
+    sel.replaceChildren(...Object.values(OUTPUTS).filter((o) => teamsFor(o.id).length).map((o) => h("optgroup", { label: o.name },
+      teamsFor(o.id).map((t) => h("option", { value: t.teamId, selected: t.teamId === selTeam }, `${t.name} · ${t.versionLabel}`)))));
+    const t = teams.find((x) => x.teamId === selTeam);
+    const parts = [];
+    if (cfgLoading) parts.push(h("div", { class: "small muted", style: "display:flex;gap:8px;align-items:center" }, h("span", { class: "spinner", "aria-hidden": "true" }), "Loading the team's setup…"));
+    else if (cfgError) parts.push(h("div", { class: "notice err", role: "alert" }, icon("warn"), h("span", null, `Could not load this team's setup: ${cfgError}`),
+      h("button", { type: "button", class: "linkbtn", style: "margin-left:auto;min-height:24px;color:inherit", onClick: loadConfig }, "Try again")));
+    else if (cfg) {
+      const r = readers();
+      parts.push(h("div", { class: "team-line" },
+        h("div", { class: "avatars", "aria-hidden": "true" }, teamRoles(cfg).map((id) => avatar(id, 32, 12))),
+        h("div", { style: "min-width:0" },
+          h("div", { style: "font-weight:600" }, `${cfg.name} · ${cfg.versionLabel}`),
+          h("div", { class: "small muted" }, `Coordinator: ${roleInfo(coordinatorOf(cfg)).name} · produces a ${outputOf(cfg).name.toLowerCase()} · ${plural(t.runCount || 0, "run")} · reads files: ${r.length ? listNames(r) : "nobody"}`)),
+        h("a", { class: "small", style: "margin-left:auto;font-weight:600", href: appLink("/team.html", { id: t.teamId, v: selVersion === t.version ? null : selVersion }) }, "View team")));
+      parts.push(agentsNote(t.teamId));
+      if (selVersion !== t.version) parts.push(h("div", { class: "notice info" }, icon("info"),
+        h("span", null, `Using ${cfg.versionLabel}, an older version of this team. The latest is ${t.versionLabel}.`),
+        h("button", { type: "button", class: "linkbtn", style: "margin-left:auto;min-height:24px;color:inherit", onClick: () => { selVersion = t.version; loadConfig(); } }, `Use ${t.versionLabel}`)));
+    }
+    info.replaceChildren(...parts);
+  }
+  renderDependent();
+}
+$("team-select").addEventListener("change", (e) => {
+  selTeam = e.target.value;
+  const t = teams.find((x) => x.teamId === selTeam);
+  selVersion = t ? t.version : null;
+  if (t && outputIdOf(t) !== selOutput) { selOutput = outputIdOf(t); syncTask(); $("live-out").textContent = `Output: ${OUTPUTS[selOutput].name}.`; }
+  loadConfig();
+});
+
+/** Everything that depends on the chosen team: outputs, summary, the code step and the file notes. */
+function renderDependent() {
+  renderOutputs();
+  const gh = hasGithub();
+  const coord = roleInfo(cfg ? coordinatorOf(cfg) : TEMPLATES[DEFAULT_TEMPLATE].coordinator).name;
+  $("sum-coord").textContent = cfg ? coord : "—";
+  $("sum-note").textContent = `Nothing runs yet. The ${cfg ? coord : "coordinator"} drafts a brief and a section plan, and you approve it first.`;
+  if (gh) $("code-help").textContent = `Point the ${listNames(githubRoles())} at a public GitHub repository. It reads the code (read-only) to check feasibility, effort and risks.`;
+  $("code-card").hidden = !gh;
+  $("sum-code-row").hidden = !gh;
+  const g = (cfg && cfg.guardrails) || DEFAULT_GUARDRAILS;
+  $("sum-budget").textContent = `${fmtNumber(g.maxTokens)} tokens`;
+  $("sum-turns").textContent = `${g.maxTurns} turns`;
+  $("sum-team").textContent = cfg && !cfg.legacy ? `${cfg.name} · ${cfg.versionLabel}` : "Default team";
+  $("sum-models").textContent = cfg ? modelSummary(cfg) : "—";
+  // Step numbers follow the visible sections.
+  let n = 0;
+  document.querySelectorAll("form section.card").forEach((s) => { const st = s.querySelector(".step"); if (st) st.textContent = s.hidden ? "" : `${++n}. `; });
+  updateCode();
+  renderFiles();
+}
+
+/** "Llama 4 Scout 17B (everyone)", or the members on another model first: "Critic: Llama 3.3 70B · others: Llama 4 Scout 17B". */
+function modelSummary(team) {
+  const byModel = new Map();
+  for (const id of teamRoles(team)) { const m = memberModel(team, id); byModel.set(m, [...(byModel.get(m) || []), id]); }
+  if (byModel.size === 1) return `${modelInfo([...byModel.keys()][0]).label} (everyone)`;
+  const parts = [...byModel.entries()].filter(([m]) => m !== DEFAULT_MODEL_ID).map(([m, ids]) => `${listNames(ids)}: ${modelInfo(m).label}`);
+  if (byModel.has(DEFAULT_MODEL_ID)) parts.push(`others: ${modelInfo(DEFAULT_MODEL_ID).label}`);
+  return parts.join(" · ");
+}
+
+// ---------- Code ----------
+/** The code step's summary line and the code-aware / questions-only notice. */
+function updateCode() {
+  const repo = $("repo").value.trim(), branch = $("branch").value.trim() || "main";
+  const linked = REPO_RE.test(repo);
+  const who = listNames(githubRoles()) || "Engineer";
+  $("sum-code").textContent = linked ? `${repo} · ${branch}` : "None (technical Q&A only)";
+  const n = linked
+    ? h("div", { class: "notice ok" }, icon("check"), h("span", null, h("strong", null, `${who} mode: code-aware.`), ` The ${who} reads `, repo, " (", branch, ") read-only, plus the shared draft."))
+    : h("div", { class: "notice warn" }, icon("info"), h("span", null, h("strong", null, `${who} mode: technical questions only.`), ` No code is linked, so the ${who} answers from general knowledge. It won't estimate effort against your codebase.`));
+  $("eng-mode").replaceChildren(n);
+  if (!repo || linked) $("repo-err").hidden = true;
+}
+$("repo").addEventListener("input", updateCode);
+$("branch").addEventListener("input", updateCode);
+
+// ---------- Context files ----------
+let files = [];   // { key, name, bytes, status: "uploading"|"ready"|"failed", meta, error }
+let fileSeq = 0;
+const activeFiles = () => files.filter((f) => f.status !== "failed");
+function extOf(name) { const m = /\.([a-z0-9]+)$/i.exec(name); return m ? m[1].toLowerCase() : ""; }
+
+let filesWarning = null;
+/** Validate picked or dropped files, start uploading the good ones, and announce the result. */
+function addFiles(list) {
+  const skipped = [], added = [];
+  filesWarning = null;
+  for (const file of Array.from(list || [])) {
+    if (activeFiles().length >= MAX_FILES) { skipped.push(file.name); continue; }
+    const ext = extOf(file.name) === "htm" ? "html" : extOf(file.name);
+    const entry = { key: ++fileSeq, name: file.name, bytes: file.size, status: "uploading", meta: null, error: null };
+    files.push(entry); added.push(entry);
+    if (!FILE_TYPES.includes(ext)) { entry.status = "failed"; entry.error = "Not a supported type. Use PDF, DOCX, XLSX, CSV, TXT, MD or HTML."; continue; }
+    if (file.size > FILE_MAX_BYTES) { entry.status = "failed"; entry.error = `Too large (${fmtBytes(file.size)}). The limit is 2 MB.`; continue; }
+    if (file.size === 0) { entry.status = "failed"; entry.error = "The file is empty."; continue; }
+    upload(entry, file);
+  }
+  if (skipped.length) filesWarning = `Only ${MAX_FILES} files per run. Skipped: ${skipped.join(", ")}.`;
+  renderFiles();
+  const msg = [];
+  const uploading = added.filter((f) => f.status === "uploading").length;
+  if (uploading) msg.push(`Uploading ${plural(uploading, "file")}.`);
+  for (const b of added.filter((f) => f.status === "failed")) msg.push(`${b.name}: ${b.error}`);
+  if (filesWarning) msg.push(filesWarning);
+  $("file-status").textContent = msg.join(" ");
+}
+
+/** POST one file to /api/files (multipart; text is extracted server-side). Fixture mode fakes the result. */
+async function upload(entry, file) {
+  try {
+    let meta;
+    if (FIXTURE) {
+      await delay(700 + Math.random() * 600);
+      if (/fail/i.test(file.name)) meta = { fileId: `f_fx${entry.key}`, name: file.name, mimeType: file.type, bytes: file.size, chars: 0, truncated: false, status: "failed", error: "Could not extract any text (fixture).", createdAt: new Date().toISOString() };
+      else { const chars = Math.min(60000, Math.round(file.size * 0.6) || 1); meta = { fileId: `f_fx${entry.key}`, name: file.name, mimeType: file.type, bytes: file.size, chars, truncated: chars === 60000, status: "ready", error: null, createdAt: new Date().toISOString() }; }
+    } else {
+      const fd = new FormData();
+      fd.append("file", file, file.name);
+      let res;
+      try { res = await fetch("/api/files", { method: "POST", body: fd, headers: { accept: "application/json" } }); }
+      catch { throw new Error("Network error: could not reach the server."); }
+      if (res.status === 401) return redirectToLogin();
+      const text = await res.text();
+      let data = null; try { data = text ? JSON.parse(text) : null; } catch { /* not JSON */ }
+      if (!res.ok) throw new Error((data && data.error) || `HTTP ${res.status}`);
+      if (!data || !data.fileId) throw new Error("The server did not return the file.");
+      meta = data;
+    }
+    if (!files.includes(entry)) return; // removed while uploading
+    entry.meta = meta;
+    entry.status = meta.status === "ready" ? "ready" : "failed";
+    entry.error = meta.status === "ready" ? null : (meta.error || "Text extraction failed.");
+    $("file-status").textContent = entry.status === "ready" ? `${entry.name} is ready: ${fmtNumber(meta.chars)} characters of text.` : `${entry.name} failed: ${entry.error}`;
+  } catch (err) {
+    if (!files.includes(entry)) return;
+    entry.status = "failed"; entry.error = err.message;
+    $("file-status").textContent = `${entry.name} failed: ${err.message}`;
+  }
+  renderFiles();
+}
+
+/** Remove a file from the list and move focus to its neighbour. */
+function removeFile(entry) {
+  const i = files.indexOf(entry);
+  files = files.filter((f) => f !== entry);
+  filesWarning = null;
+  renderFiles();
+  $("file-status").textContent = `Removed ${entry.name}.`;
+  const next = document.querySelector(`[data-key="rm-${(files[i] || files[i - 1] || {}).key}"]`) || $("add-files");
+  next.focus();
+}
+
+/** The file list, the add button's limit, who reads the files, and the summary count. */
+function renderFiles() {
+  keepFocus(() => {
+    $("file-list").replaceChildren(...files.map((f) => {
+      let status;
+      if (f.status === "uploading") status = h("span", { class: "small muted", style: "display:inline-flex;gap:6px;align-items:center" }, h("span", { class: "spinner", "aria-hidden": "true", style: "width:14px;height:14px" }), "Uploading…");
+      else if (f.status === "ready") status = pill(`Ready · ${fmtNumber(f.meta.chars)} chars${f.meta.truncated ? " (cut)" : ""}`, "s-ok", { sm: true });
+      else status = pill("Failed", "s-fail", { sm: true });
+      return h("li", { class: "file-item" },
+        h("span", { class: "nm" }, icon("file"), f.name),
+        h("span", { class: "sz" }, fmtBytes(f.bytes)),
+        status,
+        h("button", { type: "button", class: "iconbtn", "aria-label": `Remove ${f.name}`, title: "Remove", "data-key": `rm-${f.key}`, onClick: () => removeFile(f) }, icon("x")),
+        f.status === "failed" ? h("span", { class: "err" }, f.error) : null,
+        f.status === "ready" && f.meta.truncated ? h("span", { class: "xs muted", style: "flex-basis:100%" }, "Long file: only the first 60,000 characters are kept.") : null);
+    }));
+    const full = activeFiles().length >= MAX_FILES;
+    $("add-files").disabled = full;
+    $("add-files").title = full ? `Up to ${MAX_FILES} files per run` : "";
+    const r = readers();
+    const notes = [];
+    if (cfg && !r.length) notes.push(h("div", { class: "notice warn" }, icon("warn"), h("span", null, h("strong", null, "No one on this team can read files. "), files.length ? "Attached files won't be used. " : "", "Give a member the “Read uploaded files” tool in the ", h("a", { href: appLink("/team.html", { id: selTeam }) }, "team editor"), ".")));
+    else if (cfg && files.length) notes.push(h("p", { class: "small muted", style: "margin:0" }, `Read by: ${listNames(r)}.`));
+    if (filesWarning) notes.unshift(h("p", { class: "field-error", style: "margin:0" }, filesWarning));
+    $("files-note").replaceChildren(...notes);
+  });
+  const ready = files.filter((f) => f.status === "ready").length, up = files.filter((f) => f.status === "uploading").length;
+  $("sum-files").textContent = !files.length ? "None" : [ready ? `${ready} ready` : null, up ? `${up} uploading` : null, files.length - ready - up ? `${files.length - ready - up} failed` : null].filter(Boolean).join(", ");
+}
+
+$("add-files").addEventListener("click", () => $("file-input").click());
+$("file-input").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+const drop = $("drop");
+let dragDepth = 0;
+drop.addEventListener("dragenter", (e) => { e.preventDefault(); dragDepth++; drop.classList.add("over"); });
+drop.addEventListener("dragover", (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; });
+drop.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; drop.classList.remove("over"); } });
+drop.addEventListener("drop", (e) => { e.preventDefault(); dragDepth = 0; drop.classList.remove("over"); addFiles(e.dataTransfer.files); });
+// A file dropped outside the zone must not navigate away from the form.
+window.addEventListener("dragover", (e) => e.preventDefault());
+window.addEventListener("drop", (e) => e.preventDefault());
+
+// ---------- Submit ----------
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const task = $("task").value.trim(), title = $("title").value.trim();
+  const gh = hasGithub();
+  const repo = gh ? $("repo").value.trim() : "", branch = $("branch").value.trim();
+  let bad = false;
+  $("task-err").hidden = !!task; $("task-err").textContent = task ? "" : "Describe the task first.";
+  $("task").setAttribute("aria-invalid", task ? "false" : "true");
+  if (!task) bad = true;
+  const repoOk = !repo || REPO_RE.test(repo);
+  $("repo-err").hidden = repoOk; $("repo-err").textContent = repoOk ? "" : "Use the form owner/name, e.g. cloudflare/agents.";
+  $("repo").setAttribute("aria-invalid", repoOk ? "false" : "true");
+  if (!repoOk) bad = true;
+  if (bad) { (task ? $("repo") : $("task")).focus(); return; }
+  const showError = (msg) => { $("error").replaceChildren(icon("warn"), h("span", null, msg)); $("error").hidden = false; };
+  if (files.some((f) => f.status === "uploading")) { showError("Wait for the files to finish uploading."); return; }
+  if (cfgLoading) { showError("Wait for the team to finish loading."); return; }
+
+  const body = { task };
+  if (title) body.title = title;
+  if (repo) { body.repo = repo; body.branch = branch || "main"; }
+  if (cfg && !cfg.legacy && teams && !teamsError) { body.teamId = cfg.teamId; body.teamVersion = cfg.version; }
+  const fileIds = files.filter((f) => f.status === "ready").map((f) => f.meta.fileId);
+  if (fileIds.length) body.fileIds = fileIds;
+  $("submit").disabled = true; $("submit").textContent = "Starting…"; $("error").hidden = true;
+  try {
+    if (FIXTURE) { await delay(300); location.href = `/run.html?fixture=${selOutput === "lab-experiment" ? "lab-awaiting" : "awaiting"}`; return; }
+    const res = await postJSON("/api/runs", body);
+    if (!res.runId) throw new Error("The server did not return a run id.");
+    location.href = `/run.html?id=${encodeURIComponent(res.runId)}`;
+  } catch (err) {
+    showError(`Could not start the run: ${err.message}`);
+    $("submit").disabled = false; $("submit").textContent = "Draft the brief";
+  }
+});
+
+syncTask();
+renderDependent();
+loadTeams();
+loadModels().then(() => renderDependent());
+</script>
+</body>
+</html>

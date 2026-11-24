@@ -1,0 +1,382 @@
+[
+  {
+    "templateId": "product-squad",
+    "name": "Product squad",
+    "description": "Product lead (coordinator), Researcher, Designer, Engineer, Critic",
+    "outputId": "work-plan",
+    "coordinator": "PL",
+    "members": [
+      "PL",
+      "R",
+      "D",
+      "E",
+      "C"
+    ],
+    "consultPairs": [
+      {
+        "a": "R",
+        "b": "D",
+        "what": "Consult: findings and user needs"
+      },
+      {
+        "a": "D",
+        "b": "E",
+        "what": "Consult: feasibility check"
+      },
+      {
+        "a": "R",
+        "b": "E",
+        "what": "Consult: technical dependencies"
+      }
+    ],
+    "defaultConsults": [
+      {
+        "a": "R",
+        "b": "D",
+        "what": "Consult: findings and user needs"
+      },
+      {
+        "a": "D",
+        "b": "E",
+        "what": "Consult: feasibility check"
+      },
+      {
+        "a": "R",
+        "b": "E",
+        "what": "Consult: technical dependencies"
+      }
+    ],
+    "guardrails": {
+      "maxTurns": 60,
+      "maxTokens": 120000,
+      "criticRounds": 2,
+      "noProgressTurns": 5
+    },
+    "roles": [
+      {
+        "id": "PL",
+        "name": "Product lead",
+        "initials": "PL",
+        "color": "#3B5BDB",
+        "coordinator": true,
+        "personality": "Clear and decisive. Keeps scope tight.",
+        "responsibleFor": "Writes the brief, assigns sections, assembles the final document.",
+        "tools": [
+          "shared_draft",
+          "task_list"
+        ]
+      },
+      {
+        "id": "R",
+        "name": "Researcher",
+        "initials": "R",
+        "color": "#237032",
+        "coordinator": false,
+        "personality": "Evidence first. Always cites sources.",
+        "responsibleFor": "Context, user needs, dependencies.",
+        "tools": [
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "id": "D",
+        "name": "Designer",
+        "initials": "D",
+        "color": "#B02358",
+        "coordinator": false,
+        "personality": "User-centred. Thinks in flows.",
+        "responsibleFor": "Scope from the user's side, milestones that ship value.",
+        "tools": [
+          "shared_draft"
+        ]
+      },
+      {
+        "id": "E",
+        "name": "Engineer",
+        "initials": "E",
+        "color": "#5F3DC4",
+        "coordinator": false,
+        "personality": "Pragmatic. Flags effort and risk early.",
+        "responsibleFor": "Timeline, technical risks, feasibility. Reads the code when a public GitHub repo is linked.",
+        "tools": [
+          "github_repo",
+          "shared_draft"
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Critic",
+        "initials": "C",
+        "color": "#C2410C",
+        "coordinator": false,
+        "personality": "Strict but fair. Has no tools for making things.",
+        "responsibleFor": "Reviews every section against the brief.",
+        "tools": [
+          "comment"
+        ]
+      }
+    ],
+    "sections": [
+      {
+        "id": "goal",
+        "name": "Goal",
+        "owner": "PL",
+        "consults": [],
+        "guidance": "One or two sentences: the outcome and the deadline."
+      },
+      {
+        "id": "scope",
+        "name": "Scope and non-goals",
+        "owner": "D",
+        "consults": [
+          "R"
+        ],
+        "guidance": "What is in scope, and explicit non-goals."
+      },
+      {
+        "id": "milestones",
+        "name": "Milestones",
+        "owner": "D",
+        "consults": [
+          "E"
+        ],
+        "guidance": "3–5 milestones that each ship user value."
+      },
+      {
+        "id": "owners",
+        "name": "Owners",
+        "owner": "PL",
+        "consults": [],
+        "guidance": "Who owns what. Use [PLACEHOLDER] names, never invent people."
+      },
+      {
+        "id": "timeline",
+        "name": "Timeline",
+        "owner": "E",
+        "consults": [
+          "D"
+        ],
+        "guidance": "Phases with rough dates up to the deadline."
+      },
+      {
+        "id": "risks",
+        "name": "Risks",
+        "owner": "E",
+        "consults": [
+          "R"
+        ],
+        "guidance": "Top risks, each with a likelihood and a concrete mitigation."
+      },
+      {
+        "id": "deps",
+        "name": "Dependencies",
+        "owner": "R",
+        "consults": [
+          "E"
+        ],
+        "guidance": "Things that must happen or be decided first."
+      },
+      {
+        "id": "open",
+        "name": "Open questions",
+        "owner": "PL",
+        "consults": [],
+        "guidance": "Questions raised during the run that no agent could answer. Not reviewed."
+      }
+    ],
+    "outputName": "Work plan"
+  },
+  {
+    "templateId": "research-lab",
+    "name": "Research lab",
+    "description": "Principal investigator (coordinator), Methods specialist, Data analyst, Ethics reviewer, Critic",
+    "outputId": "lab-experiment",
+    "coordinator": "PI",
+    "members": [
+      "PI",
+      "MS",
+      "DA",
+      "ER",
+      "C"
+    ],
+    "consultPairs": [
+      {
+        "a": "MS",
+        "b": "DA",
+        "what": "Consult: measurement and sample size"
+      },
+      {
+        "a": "MS",
+        "b": "ER",
+        "what": "Consult: participant risk in the procedure"
+      },
+      {
+        "a": "DA",
+        "b": "ER",
+        "what": "Consult: data privacy and retention"
+      }
+    ],
+    "defaultConsults": [
+      {
+        "a": "MS",
+        "b": "DA",
+        "what": "Consult: measurement and sample size"
+      },
+      {
+        "a": "MS",
+        "b": "ER",
+        "what": "Consult: participant risk in the procedure"
+      },
+      {
+        "a": "DA",
+        "b": "ER",
+        "what": "Consult: data privacy and retention"
+      }
+    ],
+    "guardrails": {
+      "maxTurns": 60,
+      "maxTokens": 120000,
+      "criticRounds": 2,
+      "noProgressTurns": 5
+    },
+    "roles": [
+      {
+        "id": "PI",
+        "name": "Principal investigator",
+        "initials": "PI",
+        "color": "#0B7285",
+        "coordinator": true,
+        "personality": "Rigorous and focused. States the question before the method.",
+        "responsibleFor": "Writes the brief, owns the hypothesis, assembles the experiment design.",
+        "tools": [
+          "shared_draft",
+          "task_list"
+        ]
+      },
+      {
+        "id": "MS",
+        "name": "Methods specialist",
+        "initials": "MS",
+        "color": "#8C5A00",
+        "coordinator": false,
+        "personality": "Precise. Prefers the simplest design that answers the question.",
+        "responsibleFor": "Variables, method, sample and controls.",
+        "tools": [
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "id": "DA",
+        "name": "Data analyst",
+        "initials": "DA",
+        "color": "#495057",
+        "coordinator": false,
+        "personality": "Quantitative and sceptical. Names the test and the numbers behind it.",
+        "responsibleFor": "Measurements, analysis plan, sample size.",
+        "tools": [
+          "sample_size",
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "id": "ER",
+        "name": "Ethics reviewer",
+        "initials": "ER",
+        "color": "#9C36B5",
+        "coordinator": false,
+        "personality": "Protective of participants. Asks who could be harmed and how consent works.",
+        "responsibleFor": "Risks and ethics: consent, privacy, harm, data handling.",
+        "tools": [
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Critic",
+        "initials": "C",
+        "color": "#C2410C",
+        "coordinator": false,
+        "personality": "Strict but fair. Has no tools for making things.",
+        "responsibleFor": "Reviews every section against the brief.",
+        "tools": [
+          "comment"
+        ]
+      }
+    ],
+    "sections": [
+      {
+        "id": "hypothesis",
+        "name": "Hypothesis",
+        "owner": "PI",
+        "consults": [],
+        "guidance": "One testable hypothesis with a direction and a null hypothesis."
+      },
+      {
+        "id": "variables",
+        "name": "Variables",
+        "owner": "MS",
+        "consults": [
+          "DA"
+        ],
+        "guidance": "Independent, dependent and controlled variables, each with how it is operationalised."
+      },
+      {
+        "id": "method",
+        "name": "Method",
+        "owner": "MS",
+        "consults": [
+          "ER"
+        ],
+        "guidance": "Design (e.g. randomised A/B, within-subjects), procedure step by step, duration."
+      },
+      {
+        "id": "sample",
+        "name": "Sample and controls",
+        "owner": "MS",
+        "consults": [
+          "DA"
+        ],
+        "guidance": "Who takes part, how they are recruited and assigned, the control condition, and the sample size with its justification."
+      },
+      {
+        "id": "measurements",
+        "name": "Measurements",
+        "owner": "DA",
+        "consults": [
+          "MS"
+        ],
+        "guidance": "Each metric with its exact definition, unit, time window and data source."
+      },
+      {
+        "id": "analysis",
+        "name": "Analysis plan",
+        "owner": "DA",
+        "consults": [
+          "MS"
+        ],
+        "guidance": "Primary test, significance level, power, how missing data and multiple comparisons are handled, and the decision rule."
+      },
+      {
+        "id": "ethics",
+        "name": "Risks and ethics",
+        "owner": "ER",
+        "consults": [
+          "MS"
+        ],
+        "guidance": "Consent, privacy and data retention, possible harms and how they are mitigated, and stop conditions."
+      },
+      {
+        "id": "open",
+        "name": "Open questions",
+        "owner": "PI",
+        "consults": [],
+        "guidance": "Questions raised during the run that no agent could answer. Not reviewed."
+      }
+    ],
+    "outputName": "Lab experiment design"
+  }
+]

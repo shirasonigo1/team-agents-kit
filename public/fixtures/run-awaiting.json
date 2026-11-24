@@ -1,0 +1,326 @@
+{
+  "runId": "r_awaitingapproval_offline01",
+  "title": "Offline mode launch plan",
+  "task": "Plan the launch of offline mode for our field-notes app. Target: beta by end of Q1. The team is 4 engineers and 1 designer.",
+  "output": "work-plan",
+  "team": {
+    "name": "Mobile Product Squad",
+    "version": "v3"
+  },
+  "repo": {
+    "name": "example-org/field-notes-app",
+    "branch": "main"
+  },
+  "teamRef": {
+    "teamId": "squad",
+    "version": 3
+  },
+  "teamConfig": {
+    "teamId": "squad",
+    "name": "Mobile Product Squad",
+    "version": 3,
+    "versionLabel": "v3",
+    "note": "Turned off the Designer ↔ Engineer consult to save turns; Critic on Llama 3.3 70B",
+    "createdAt": "2026-11-24T08:40:00.000Z",
+    "coordinator": "PL",
+    "members": [
+      {
+        "role": "PL",
+        "personality": "Clear and decisive. Keeps scope tight.",
+        "responsibleFor": "Writes the brief, assigns sections, assembles the final document.",
+        "tools": [
+          "shared_draft",
+          "task_list"
+        ]
+      },
+      {
+        "role": "R",
+        "personality": "Evidence first. Always cites sources, and quotes the uploaded files when they answer the question.",
+        "responsibleFor": "Context, user needs, dependencies.",
+        "tools": [
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "D",
+        "personality": "User-centred. Thinks in flows.",
+        "responsibleFor": "Scope from the user's side, milestones that ship value.",
+        "tools": [
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "E",
+        "personality": "Pragmatic. Flags effort and risk early.",
+        "responsibleFor": "Timeline, technical risks, feasibility. Reads the code when a public GitHub repo is linked.",
+        "tools": [
+          "github_repo",
+          "read_files",
+          "shared_draft"
+        ]
+      },
+      {
+        "role": "C",
+        "personality": "Strict but fair. Has no tools for making things.",
+        "responsibleFor": "Reviews every section against the brief.",
+        "tools": [
+          "comment"
+        ],
+        "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+      }
+    ],
+    "rules": [
+      {
+        "from": "PL",
+        "to": "*",
+        "what": "Assigns sections"
+      },
+      {
+        "from": "*",
+        "to": "PL",
+        "what": "Returns finished sections and open questions"
+      },
+      {
+        "from": "C",
+        "to": "*",
+        "what": "Approves or sends a section back"
+      },
+      {
+        "from": "*",
+        "to": "C",
+        "what": "Submits a section for review"
+      },
+      {
+        "from": "R",
+        "to": "D",
+        "what": "Consult: findings and user needs"
+      },
+      {
+        "from": "D",
+        "to": "R",
+        "what": "Consult: findings and user needs"
+      },
+      {
+        "from": "R",
+        "to": "E",
+        "what": "Consult: technical dependencies"
+      },
+      {
+        "from": "E",
+        "to": "R",
+        "what": "Consult: technical dependencies"
+      }
+    ],
+    "guardrails": {
+      "maxTurns": 60,
+      "maxTokens": 150000,
+      "criticRounds": 2,
+      "noProgressTurns": 5
+    }
+  },
+  "files": [
+    {
+      "fileId": "f_roadmap01",
+      "name": "field-notes-roadmap.pdf",
+      "mimeType": "application/pdf",
+      "bytes": 248312,
+      "chars": 12480,
+      "truncated": false,
+      "status": "ready",
+      "error": null,
+      "createdAt": "2026-11-24T09:11:20.000Z"
+    },
+    {
+      "fileId": "f_interviews01",
+      "name": "field-interviews.csv",
+      "mimeType": "text/csv",
+      "bytes": 1402118,
+      "chars": 60000,
+      "truncated": true,
+      "status": "ready",
+      "error": null,
+      "createdAt": "2026-11-24T09:11:40.000Z"
+    }
+  ],
+  "status": "awaiting_approval",
+  "stopReason": null,
+  "brief": {
+    "goal": "Ship an offline mode beta of the field-notes app by the end of Q1, with sync that never loses a note.",
+    "audience": "The team's engineering and design leads.",
+    "assumptions": "4 engineers and 1 designer. The linked repository (example-org/field-notes-app, main) shows how sync works today.",
+    "outOfScope": "Pricing changes and tablet layouts.",
+    "doneWhen": "All 7 reviewed sections are approved by the Critic, and anything unresolved is listed under Open questions."
+  },
+  "guardrails": {
+    "maxTurns": 60,
+    "maxTokens": 150000,
+    "criticRounds": 2,
+    "noProgressTurns": 5
+  },
+  "sections": [
+    {
+      "id": "goal",
+      "name": "Goal",
+      "owner": "PL",
+      "consults": [],
+      "guidance": "One or two sentences: the outcome and the deadline.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "scope",
+      "name": "Scope and non-goals",
+      "owner": "D",
+      "consults": [
+        "R"
+      ],
+      "guidance": "What is in scope, and explicit non-goals.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "milestones",
+      "name": "Milestones",
+      "owner": "D",
+      "consults": [
+        "E"
+      ],
+      "guidance": "3–5 milestones that each ship user value.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "owners",
+      "name": "Owners",
+      "owner": "PL",
+      "consults": [],
+      "guidance": "Who owns what. Use [PLACEHOLDER] names, never invent people.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "timeline",
+      "name": "Timeline",
+      "owner": "E",
+      "consults": [
+        "D"
+      ],
+      "guidance": "Phases with rough dates up to the deadline.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "risks",
+      "name": "Risks",
+      "owner": "E",
+      "consults": [
+        "R"
+      ],
+      "guidance": "Top risks, each with a likelihood and a concrete mitigation.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "deps",
+      "name": "Dependencies",
+      "owner": "R",
+      "consults": [
+        "E"
+      ],
+      "guidance": "Things that must happen or be decided first.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    },
+    {
+      "id": "open",
+      "name": "Open questions",
+      "owner": "PL",
+      "consults": [],
+      "guidance": "Questions raised during the run that no agent could answer. Not reviewed.",
+      "status": "pending",
+      "rounds": 0,
+      "content": [],
+      "consulted": [],
+      "sources": [],
+      "reviews": [],
+      "spanIds": [],
+      "tokens": 0
+    }
+  ],
+  "openQuestions": [],
+  "spans": [
+    {
+      "id": 1,
+      "parentId": null,
+      "role": "PL",
+      "kind": "work",
+      "action": "Draft the brief",
+      "why": "A run starts with a brief the user approves before anything else happens.",
+      "status": "done",
+      "startMs": 0,
+      "durMs": 14200,
+      "depth": 0,
+      "sectionId": null,
+      "inputTokens": 1450,
+      "outputTokens": 380,
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "input": "Task: Plan the launch of offline mode for our field-notes app. Target: beta by end of Q1. The team is 4 engineers and 1 designer.",
+      "output": "Brief with goal, audience, assumptions, out of scope and done-when.",
+      "gatewayLogId": "01JDQ007000GW00000"
+    }
+  ],
+  "totals": {
+    "turns": 1,
+    "inputTokens": 1450,
+    "outputTokens": 380,
+    "sectionsApproved": 0,
+    "reviewRoundsUsed": 0
+  },
+  "activeRole": null,
+  "createdAt": "2026-11-24T09:12:00.000Z",
+  "startedAt": null,
+  "endedAt": null
+}

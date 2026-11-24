@@ -1,0 +1,33 @@
+{
+  "agentName": "squad--C",
+  "teamId": "squad",
+  "role": "C",
+  "stats": {
+    "runs": 13,
+    "turns": 101,
+    "inputTokens": 162140,
+    "outputTokens": 16740,
+    "lastActiveAt": "2026-11-24T09:17:02.300Z"
+  },
+  "memories": [
+    {
+      "id": 2,
+      "kind": "lesson",
+      "text": "For offline sync plans, the conflict risk needs a mitigation that protects every note.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": null,
+      "createdAt": "2026-11-24T09:17:02.300Z"
+    },
+    {
+      "id": 1,
+      "kind": "lesson",
+      "text": "Check that every risk has a mitigation, not only a likelihood.",
+      "runId": "r_squad_beta02",
+      "teamVersion": 2,
+      "sectionId": null,
+      "createdAt": "2026-11-20T14:05:00.000Z"
+    }
+  ],
+  "recentInbox": []
+}

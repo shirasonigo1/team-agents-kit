@@ -1,0 +1,97 @@
+{
+  "agentName": "ux-research--ER",
+  "teamId": "ux-research",
+  "role": "ER",
+  "stats": {
+    "runs": 2,
+    "turns": 6,
+    "inputTokens": 9800,
+    "outputTokens": 1940,
+    "lastActiveAt": "2026-11-24T11:44:13.700Z"
+  },
+  "memories": [
+    {
+      "id": 3,
+      "kind": "outcome",
+      "text": "Risks and ethics: approved first time. Consent: covered by the app's terms for product improvement tests; no extra data is collected for the test.",
+      "runId": "r_labsecond_onboard02",
+      "teamVersion": 2,
+      "sectionId": "ethics",
+      "createdAt": "2026-11-24T11:43:44.450Z"
+    },
+    {
+      "id": 2,
+      "kind": "lesson",
+      "text": "Tie the stop condition to a guardrail metric (week-1 uninstalls) so it can be checked during the test.",
+      "runId": "r_labcompleted_onboard01",
+      "teamVersion": 2,
+      "sectionId": null,
+      "createdAt": "2026-11-24T09:16:36.000Z"
+    },
+    {
+      "id": 1,
+      "kind": "outcome",
+      "text": "Risks and ethics: approved first time. Consent: covered by the app's terms for product improvement tests; no extra data is collected for the test.",
+      "runId": "r_labcompleted_onboard01",
+      "teamVersion": 2,
+      "sectionId": "ethics",
+      "createdAt": "2026-11-24T09:16:06.750Z"
+    }
+  ],
+  "recentInbox": [
+    {
+      "id": 6,
+      "runId": "r_labsecond_onboard02",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 29,
+      "createdAt": "2026-11-24T11:43:44.450Z"
+    },
+    {
+      "id": 5,
+      "runId": "r_labsecond_onboard02",
+      "from": "MS",
+      "kind": "question",
+      "text": "Question for Ethics reviewer. is it a risk to withhold the checklist from the control group?",
+      "spanId": 14,
+      "createdAt": "2026-11-24T11:41:43.800Z"
+    },
+    {
+      "id": 4,
+      "runId": "r_labsecond_onboard02",
+      "from": "PI",
+      "kind": "assign",
+      "text": "Section task: Risks and ethics.",
+      "spanId": 6,
+      "createdAt": "2026-11-24T11:40:59.200Z"
+    },
+    {
+      "id": 3,
+      "runId": "r_labcompleted_onboard01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 31,
+      "createdAt": "2026-11-24T09:16:06.750Z"
+    },
+    {
+      "id": 2,
+      "runId": "r_labcompleted_onboard01",
+      "from": "MS",
+      "kind": "question",
+      "text": "Question for Ethics reviewer. is it a risk to withhold the checklist from the control group?",
+      "spanId": 14,
+      "createdAt": "2026-11-24T09:13:43.800Z"
+    },
+    {
+      "id": 1,
+      "runId": "r_labcompleted_onboard01",
+      "from": "PI",
+      "kind": "assign",
+      "text": "Section task: Risks and ethics.",
+      "spanId": 6,
+      "createdAt": "2026-11-24T09:12:59.200Z"
+    }
+  ]
+}

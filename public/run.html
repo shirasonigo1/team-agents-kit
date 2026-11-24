@@ -1,0 +1,1019 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Run · Team Agents Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="left">
+    <a class="brand" href="/teams.html">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#18181B" stroke-width="2" aria-hidden="true"><circle cx="14" cy="6" r="3.5"/><circle cx="6" cy="21" r="3.5"/><circle cx="22" cy="21" r="3.5"/><path d="M12.3 9 7.7 18M15.7 9l4.6 9M9.5 21h9"/></svg>
+      Team Agents Kit</a>
+    <nav class="main-nav" aria-label="Main"><a href="/teams.html">Teams</a><a href="/runs.html" aria-current="page">Runs</a></nav>
+  </div>
+  <div class="right">
+    <a class="signout" href="/logout">Sign out</a>
+    <a class="btn primary" href="/new.html" id="new-btn">New run</a>
+  </div>
+</header>
+
+<main class="page" id="main">
+  <div id="head"></div>
+  <div id="live-status" role="status" class="sr-only"></div>
+  <div id="body"><div class="empty-state"><span class="spinner" aria-hidden="true"></span>Loading the run…</div></div>
+</main>
+<footer class="site-footer"><span>Team Agents Kit</span><a href="/plumbing.html">Plumbing check</a></footer>
+<div id="conn" class="conn" hidden></div>
+<div id="toast" role="status" class="sr-only"></div>
+
+<script src="/app.js"></script>
+<script>
+"use strict";
+// Run page (?id=<runId>, or ?fixture=<name> offline). Shows one run through its life: the coordinator drafting the
+// brief, the brief checkpoint (approve / edit), then the live trace (graph, waterfall, log, agents) with span details,
+// and the finished document with provenance and Markdown export. State arrives over the run agent's WebSocket.
+
+// ---------- Page state ----------
+const runId = queryParam("id");
+const fixture = queryParam("fixture"); // same as FIXTURE; fixture runs are loaded from /fixtures/run-<name>.json
+let S = null;               // the current RunState (short name: it is read everywhere below)
+let view = null;            // "trace" | "document" | null (auto: document once completed)
+let traceTab = "waterfall"; // "graph" | "waterfall" | "log"
+let selSpan = null;         // span id
+let selSection = null;      // section id
+let spanFilter = null;      // { sectionId, ids:Set }
+let showDiff = true;
+let editing = false;        // brief edit mode
+let draftBrief = null;
+let busy = null;            // "approve" | "stop"
+let actionError = null;
+let clockOffset = 0;        // fixtures: shifts Date.now() so a frozen run looks live
+let lastStatus = null;
+let live = null;
+
+// ---------- Derived values ----------
+/** Run start (createdAt) in epoch ms; span times are relative to it. */
+const createdMs = () => Date.parse(S.createdAt);
+const lastEndMs = () => S.spans.reduce((m, s) => Math.max(m, s.startMs + s.durMs), 0);
+const isLive = () => S && (S.status === "running" || S.status === "drafting_brief");
+/** Milliseconds since run start (createdAt), never before the last recorded span end. */
+function nowMs() {
+  if (!isLive()) return lastEndMs();
+  return Math.max(lastEndMs(), Date.now() - clockOffset - createdMs());
+}
+/** A span's duration; a running span grows with the clock. */
+function spanDur(sp) { return sp.status === "running" ? Math.max(sp.durMs, nowMs() - sp.startMs) : sp.durMs; }
+/** Wall-clock time since the brief was approved (or since creation), up to the end of the run. */
+function elapsedMs() {
+  const from = Date.parse(S.startedAt || S.createdAt);
+  const to = S.endedAt ? Date.parse(S.endedAt) : Date.now() - clockOffset;
+  return isNaN(from) ? 0 : Math.max(0, to - from);
+}
+/** The run's output (Work plan when the run doesn't name one) and its section plan. */
+function runOutput() { return OUTPUTS[S.output] || OUTPUTS[outputIdOf(S.teamConfig)] || OUTPUTS["work-plan"]; }
+function runPlan() { return runOutput().sections; }
+function coordId() { return coordinatorOf(teamCfg()); }
+function secById(id) { return S.sections.find((s) => s.id === id) || runPlan().find((s) => s.id === id) || null; }
+function secName(id) { const s = secById(id); return s ? s.name : String(id); }
+function spanById(id) { return S.spans.find((s) => s.id === id) || null; }
+/** Sections the Critic reviews (all but Open questions). */
+function reviewable() { return S.sections.filter((s) => !UNREVIEWED_SECTIONS.has(s.id)); }
+function sentBackSpans() { return S.spans.filter((s) => s.kind === "review" && s.status === "sent_back"); }
+/** The most send-backs any one section has had (for the review-rounds meter). */
+function maxSentBackPerSection() {
+  const c = {};
+  for (const s of sentBackSpans()) c[s.sectionId] = (c[s.sectionId] || 0) + 1;
+  return Math.max(0, ...Object.values(c));
+}
+/** The span selected by default: the newest running one, else the newest. */
+function defaultSpan() {
+  const r = [...S.spans].reverse();
+  return (r.find((s) => s.status === "running") || r[0] || {}).id ?? null;
+}
+/** The section selected by default: the first one that was sent back, else the first. */
+function defaultSection() {
+  const s = S.sections.find((x) => x.reviews.some((r) => r.verdict === "sent_back")) || S.sections[0];
+  return s ? s.id : null;
+}
+/** "trace" or "document": the user's choice, else the document once the run has completed. */
+function currentView() {
+  if (view) return view;
+  return S.status === "completed" ? "document" : "trace";
+}
+/** The team version this run used, or the built-in team for legacy runs without a teamConfig snapshot. */
+function teamCfg() { return S.teamConfig || legacyTeamConfig(S); }
+function guardrails() { return (S.teamConfig && S.teamConfig.guardrails) || S.guardrails; }
+function runFiles() { return Array.isArray(S.files) ? S.files : []; }
+/** "Team vN", linked to that team version when the run recorded one. */
+function teamLabel() {
+  const text = `${S.team.name} ${S.team.version}`;
+  return S.teamRef
+    ? h("a", { href: appLink("/team.html", { id: S.teamRef.teamId, v: S.teamRef.version }), title: "Open this team version (read-only if it is not the latest)" }, text)
+    : text;
+}
+/** Subtitle pieces: strings or nodes, joined with " · ". */
+function subtitle() {
+  const parts = [runOutput().name, teamLabel()];
+  if (S.repo) parts.push(`${S.repo.name} @ ${S.repo.branch}`);
+  const f = runFiles();
+  if (f.length) parts.push(plural(f.length, "context file"));
+  return parts;
+}
+/** Interleave " · " between strings and nodes. */
+function joinParts(parts) { const out = []; parts.forEach((p, i) => { if (i) out.push(" · "); out.push(p); }); return out; }
+/** A run title that is really the task text (or very long) is shown on one line, with the task expandable below. */
+function longTitle() {
+  const t = (S.title || "").trim(), task = (S.task || "").trim();
+  if (!t) return false;
+  // Untitled runs get the task (or its first 60 characters + "…") as their title.
+  return t.length > 70 || t === task || (t.endsWith("…") && task.startsWith(t.slice(0, -1).trimEnd()));
+}
+/** The run title as h1, clamped to one line when it is really the task text. */
+function titleBlock(text, cls) {
+  const long = longTitle();
+  return h("h1", { class: `title ${cls || ""}${long ? " clamp" : ""}`, title: long ? text : null }, text);
+}
+/** The task as an expandable line under a clamped title. */
+function taskLine() {
+  if (!S.task) return null;
+  const peek = S.task.length > 90 ? S.task.slice(0, 90).trimEnd() + "…" : S.task;
+  return h("details", { class: "task-line" }, h("summary", { "data-key": "task-line" }, "Task: ", h("span", { class: "peek" }, peek)), h("p", null, S.task));
+}
+/** The attached file whose name appears in a text (a span action or a source line), or null. */
+function fileByName(text) { return runFiles().find((f) => text.includes(f.name)) || null; }
+
+// ---------- Member agents ----------
+// Runs recorded before member agents existed have no agent fields: everything below then shows nothing extra.
+/** True if the run carries member-agent data. */
+function hasAgents() { return !!S.memberAgents || S.spans.some((sp) => sp.agent); }
+function runTeamId() { return S.teamRef ? S.teamRef.teamId : null; }
+/** The member agent name that handled a role in this run, or null. */
+function agentOf(roleId) {
+  if (S.memberAgents && S.memberAgents[roleId]) return S.memberAgents[roleId];
+  const sp = S.spans.find((x) => x.role === roleId && x.agent);
+  return sp ? sp.agent : null;
+}
+/** Ids of the memories a span put in its prompt. */
+function usedIds(sp) { return Array.isArray(sp.memoriesUsed) ? sp.memoriesUsed : []; }
+const INBOX_KIND = { assign: "assignment", question: "question", answer: "answer", review: "review note", brief: "brief", files: "files", tool_result: "tool result" };
+/** GET /api/teams/<teamId>/members/<role>, once per role (cleared when the run ends, since it then has new memories). */
+const memberViews = new Map(); // role → { loading, error, view }
+function needMember(roleId) {
+  const teamId = runTeamId();
+  if (!teamId || memberViews.has(roleId)) return memberViews.get(roleId) || null;
+  const entry = { loading: true, error: null, view: null };
+  memberViews.set(roleId, entry);
+  apiGet(`/api/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(roleId)}`)
+    .then((v) => { if (!v || !Array.isArray(v.memories)) throw new Error("Unexpected response."); entry.view = v; })
+    .catch((err) => { entry.error = err.status === 404 ? "not available on this server" : err.message; })
+    .finally(() => { entry.loading = false; if (memberViews.get(roleId) === entry) render(); });
+  return entry;
+}
+/** Small "used N memories" marker for the log and waterfall. */
+function memMark(sp) {
+  const n = usedIds(sp).length;
+  if (!n) return null;
+  return [h("span", { class: "mem-mark", "aria-hidden": "true", title: `Used ${plural(n, "memory", "memories")} from earlier runs` }, icon("memory"), String(n)),
+    h("span", { class: "sr-only" }, ` (used ${plural(n, "memory", "memories")})`)];
+}
+
+// ---------- Loading ----------
+/** Load the fixture, or open the WebSocket and fetch the state once over HTTP (whichever arrives first wins). */
+async function boot() {
+  if (fixture) {
+    try {
+      const st = await fetchJSON(`/fixtures/run-${encodeURIComponent(fixture)}.json`);
+      // Make a frozen fixture look live: "now" is just after its last span.
+      if (st.status === "running" || st.status === "drafting_brief") {
+        const end = st.spans.reduce((m, s) => Math.max(m, s.startMs + s.durMs), 0);
+        clockOffset = Date.now() - (Date.parse(st.createdAt) + end + 400);
+      }
+      setRunState(st);
+    } catch (err) { showFatal(`Could not load fixture "${fixture}": ${err.message}`); }
+    return;
+  }
+  if (!runId) { showFatal("No run selected. Open a run from the list."); return; }
+  live = connectRun(runId, setRunState, connPill);
+  try {
+    const st = await fetchJSON(runPath(runId));
+    if (!S) setRunState(st);
+  } catch (err) {
+    if (S) return; // the WebSocket already delivered state
+    if (err.status === 404) { live.close(); connPill("closed"); showFatal("This run does not exist (it may have been deleted)."); }
+    else showFatal(`Could not load the run: ${err.message}. Retrying over the live connection…`, true);
+  }
+}
+
+function showFatal(msg, soft) {
+  $("head").replaceChildren();
+  $("body").replaceChildren(h("div", { class: "empty-state" },
+    h("div", { class: `notice ${soft ? "warn" : "err"}`, role: "alert", style: "text-align:left" }, icon("warn"), h("span", null, msg)),
+    h("a", { class: "btn", href: appLink("/runs.html") }, "All runs")));
+}
+
+/** Accept a new RunState (from HTTP, WebSocket or an action), keep selections valid, and re-render. */
+function setRunState(next) {
+  if (!next || !Array.isArray(next.spans) || !Array.isArray(next.sections)) return;
+  const prev = S;
+  S = next;
+  if (S.status !== lastStatus) {
+    $("live-status").textContent = `Run status: ${(RUN_STATUS[S.status] || {}).label || S.status}${S.stopReason ? ". " + S.stopReason : ""}`;
+    if (prev && S.status !== "running") busy = null;
+    lastStatus = S.status;
+  }
+  if (busy === "approve" && S.status !== "awaiting_approval") { busy = null; editing = false; }
+  // The run just ended: members stored outcomes and reflections, so fetch their memory again.
+  if (prev && prev.status !== S.status && TERMINAL.has(S.status)) memberViews.clear();
+  if (selSpan !== null && !spanById(selSpan)) selSpan = null;
+  // Follow the newest running span until the user picks one.
+  if (selSpan === null || (prev && autoFollow && isLive())) selSpan = defaultSpan();
+  if (selSection === null || !secById(selSection)) selSection = defaultSection();
+  document.title = `${S.title || "Run"} · Team Agents Kit`;
+  render();
+}
+let autoFollow = true;      // follow the newest running span until the user picks one
+
+// ---------- Actions ----------
+/** Approve the brief, with the edited brief if the user edited it (fixture mode jumps to the running fixture). */
+async function approve() {
+  busy = "approve"; actionError = null; render();
+  try {
+    if (fixture) { location.href = "/run.html?fixture=running"; return; }
+    const body = editing && draftBrief ? { brief: draftBrief } : {};
+    setRunState(await postJSON(`${runPath(runId)}/approve`, body));
+  } catch (err) { busy = null; actionError = `Could not approve: ${err.message}`; render(); }
+}
+/** Stop the run (fixture mode simulates it locally). */
+async function stopRun() {
+  busy = "stop"; actionError = null; render();
+  try {
+    if (fixture) {
+      const st = structuredClone(S);
+      st.status = "stopped"; st.stopReason = "Stopped by you (fixture demo)."; st.endedAt = new Date(Date.now() - clockOffset).toISOString();
+      st.spans.forEach((s) => { if (s.status === "running") { s.status = "failed"; s.durMs = spanDur(s); } });
+      setRunState(st); return;
+    }
+    setRunState(await postJSON(`${runPath(runId)}/stop`, {}));
+  } catch (err) { busy = null; actionError = `Could not stop the run: ${err.message}`; render(); }
+}
+/** Select a span. opts.toTrace switches to the trace (opts.clearFilter drops a section filter) and focuses its row. */
+function pickSpan(id, opts = {}) {
+  selSpan = id; autoFollow = false;
+  if (opts.toTrace) { view = "trace"; if (opts.clearFilter) spanFilter = null; }
+  render();
+  if (opts.toTrace) requestAnimationFrame(() => { const el = document.querySelector(`[data-key="wf-${id}"],[data-key="log-${id}"]`); if (el) { el.scrollIntoView({ block: "nearest" }); el.focus({ preventScroll: true }); } });
+}
+/** Select a section. opts.toDoc switches to the document; opts.scroll scrolls it into view. */
+function pickSection(id, opts = {}) {
+  selSection = id;
+  if (opts.toDoc) view = "document";
+  render();
+  if (opts.scroll) requestAnimationFrame(() => { const el = $(`doc-${id}`); if (el) el.scrollIntoView({ block: "start", behavior: "smooth" }); });
+}
+/** Show only a section's spans in the trace. */
+function openSectionSpans(sec) {
+  spanFilter = { sectionId: sec.id, ids: new Set(sec.spanIds) };
+  view = "trace"; autoFollow = false;
+  if (sec.spanIds.length) selSpan = sec.spanIds[sec.spanIds.length - 1];
+  render();
+  requestAnimationFrame(() => { const t = $("trace-card"); if (t) t.scrollIntoView({ block: "start", behavior: "smooth" }); });
+}
+
+// ---------- Render: frame ----------
+function render() {
+  if (!S) return;
+  keepFocus(() => {
+    renderHead();
+    if (S.status === "drafting_brief") $("body").replaceChildren(renderDrafting());
+    else if (S.status === "awaiting_approval") $("body").replaceChildren(renderBrief());
+    else $("body").replaceChildren(renderRun());
+  });
+}
+
+/** Status pill with the elapsed time (ticks every second while the run is live). */
+function statusPillNow() {
+  const extra = ["running", "completed", "stopped", "failed"].includes(S.status) ? fmtDur(elapsedMs())
+    : S.status === "drafting_brief" ? fmtDur(Date.now() - clockOffset - createdMs()) : null;
+  return runStatusPill(S.status, extra);
+}
+
+/** Back link, title, status, subtitle facts, and the view / export / stop actions. */
+function renderHead() {
+  const head = $("head");
+  if (S.status === "awaiting_approval") {
+    head.replaceChildren(h("div", { class: "stack-6" },
+      h("a", { class: "back", href: appLink("/runs.html") }, "← All runs"),
+      h("div", { class: "title-line" }, h("h1", { class: "title lg" }, "Review the brief"), h("span", { id: "pill" }, statusPillNow())),
+      h("p", { class: "sub", style: "overflow-wrap:anywhere" }, joinParts([longTitle() ? null : S.title, ...subtitle()].filter(Boolean)))));
+    return;
+  }
+  const isDoc = S.status !== "drafting_brief" && currentView() === "document";
+  const meta = subtitle();
+  const tokensUsed = fmtNumber(S.totals.inputTokens + S.totals.outputTokens);
+  if (S.status === "completed") {
+    meta.push(fmtDur(elapsedMs()), plural(S.totals.turns, "turn"), `${tokensUsed} tokens`);
+    const oq = openQuestionLines().length;
+    meta.push(`${S.totals.sectionsApproved} of ${reviewable().length} sections approved${oq ? `, ${plural(oq, "open question")}` : ""}`);
+  } else if (S.status !== "drafting_brief") meta.push("approved brief");
+
+  const actions = h("div", { class: "actions" });
+  if (S.status !== "drafting_brief") {
+    actions.append(h("div", { class: "seg", role: "group", "aria-label": "View" },
+      ["trace", "document"].map((v) => h("button", {
+        type: "button", "aria-pressed": String(currentView() === v), "data-key": `view-${v}`,
+        onClick: () => { view = v; render(); }
+      }, v === "trace" ? "Trace" : "Document"))));
+    if (isDoc) {
+      actions.append(
+        h("button", { type: "button", class: "btn", "data-key": "copy", onClick: copyMarkdown }, icon("copy"), "Copy"),
+        h("button", { type: "button", class: "btn dark", "data-key": "export", onClick: exportMarkdown }, icon("download"), "Export Markdown"));
+    }
+    const canStop = S.status === "running" && busy !== "stop";
+    append(actions, [h("button", {
+      type: "button", class: "btn danger", "data-key": "stop", disabled: !canStop,
+      "aria-describedby": S.status === "running" ? null : "stop-why", onClick: stopRun
+    }, icon("stop"), busy === "stop" ? "Stopping…" : "Stop run"),
+    S.status === "running" ? null : h("span", { id: "stop-why", class: "sr-only" }, "Only a running run can be stopped.")]);
+  }
+  head.replaceChildren(h("div", { class: "title-row" },
+    h("div", { class: "stack-6", style: "gap:4px;min-width:0;flex:1 1 420px" },
+      h("a", { class: "back", href: appLink("/runs.html") }, "← All runs"),
+      h("div", { class: "title-line" + (longTitle() ? " clamp-wrap" : "") }, titleBlock(S.title || "Untitled run"), h("span", { id: "pill", style: "flex-shrink:0" }, statusPillNow())),
+      longTitle() && S.status !== "drafting_brief" ? taskLine() : null,
+      h("p", { class: "sub" }, joinParts(meta))),
+    actions));
+}
+
+function errorBox() {
+  return actionError ? h("div", { class: "notice err", role: "alert" }, icon("warn"), h("span", null, actionError)) : null;
+}
+
+// ---------- Drafting ----------
+/** While the coordinator drafts the brief: the task, spans so far, and what happens next. */
+function renderDrafting() {
+  return h("div", { class: "row tight" },
+    h("section", { class: "card grow", "aria-labelledby": "draft-h" },
+      h("div", { style: "display:flex;align-items:center;gap:12px" }, h("span", { class: "spinner", "aria-hidden": "true" }),
+        h("h2", { id: "draft-h", class: "h2" }, `The ${roleInfo(coordId()).name} is drafting the brief…`)),
+      h("p", { class: "muted", style: "margin:0" }, "Nothing else runs yet. You'll review the brief and the section plan, and approve them before the team starts."),
+      h("div", { class: "well" }, h("div", { class: "xs muted", style: "font-weight:600" }, "Your task"), h("div", { style: "white-space:pre-wrap;overflow-wrap:anywhere" }, S.task)),
+      h("h3", { class: "eyebrow" }, "Spans so far"),
+      S.spans.length ? renderLog(S.spans, false) : h("p", { class: "muted", style: "margin:0" }, "No spans yet.")),
+    h("aside", { class: "card side p18" }, h("h2", { class: "h2" }, "What happens next"),
+      h("ol", { style: "margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--text-2)" },
+        h("li", null, `The ${roleInfo(coordId()).name} writes a brief for the ${runOutput().name.toLowerCase()}: goal, audience, assumptions, out of scope, done when.`),
+        h("li", null, "You review it with the section plan and approve, or edit then approve."),
+        h("li", null, "The team works on its own. You can stop it, but not steer it.")),
+      filesBlock()));
+}
+
+/** Attached context files with their extracted size. */
+function filesBlock() {
+  const f = runFiles();
+  if (!S.teamConfig && !f.length) return null;
+  const r = whoHasTool(teamCfg(), "read_files");
+  return h("div", { class: "stack-6", style: "gap:8px" },
+    h("div", { class: "small", style: "font-weight:600" }, "Context files"),
+    f.length ? h("ul", { class: "file-facts" }, f.map((x) => h("li", null, icon("file"), h("span", { style: "min-width:0" }, x.name),
+      h("span", { class: "c" }, `${fmtNumber(x.chars)} chars${x.truncated ? " (cut)" : ""}`))))
+      : h("p", { class: "small muted", style: "margin:0" }, "None attached."),
+    f.length ? h("p", { class: "xs muted", style: "margin:0" }, r.length ? `Read by ${listNames(r)} with the “Read uploaded files” tool.` : "No one on this team can read files, so they won't be used.") : null);
+}
+
+// ---------- Brief checkpoint ----------
+const BRIEF_FIELDS = [["goal", "Goal"], ["audience", "Who reads it"], ["assumptions", "Assumptions"], ["outOfScope", "Out of scope"], ["doneWhen", "Done when"]];
+
+/** A member's tools for the section plan, noting tools that have nothing to work on in this run. */
+function toolsFor(roleId) {
+  const tools = memberTools(teamCfg(), roleId).map((t) => t === "github_repo" && !S.repo ? "GitHub repository (not linked)"
+    : t === "read_files" && !runFiles().length ? "Read uploaded files (none attached)" : TOOL_LABELS[t] || t);
+  return tools.length ? tools.join(", ") : "No tools";
+}
+/** Consult cell: effective consults under the run's team rules; consults switched off are shown struck through. */
+function consultCell(sec) {
+  const plan = runPlan().find((p) => p.id === sec.id) || sec;
+  const eff = effectiveConsults(plan, teamCfg().rules);
+  const off = (plan.consults || []).filter((r) => !eff.includes(r));
+  if (!eff.length && !off.length) return "—";
+  return h("span", null, eff.length ? listNames(eff) : null, eff.length && off.length ? " " : null,
+    off.length ? h("span", { class: "muted", title: "Turned off in this team version" }, h("s", null, listNames(off)), " (rule off)") : null);
+}
+
+/** The brief checkpoint: the brief (read or edit), the section plan, and what approving starts. */
+function renderBrief() {
+  const b = S.brief || {};
+  if (editing && !draftBrief) draftBrief = { ...b };
+  const dl = h("dl", { class: "brief" });
+  for (const [k, label] of BRIEF_FIELDS) {
+    if (editing) {
+      dl.append(h("dt", null, h("label", { for: `bf-${k}` }, label)),
+        h("dd", null, h("textarea", { id: `bf-${k}`, class: "input", rows: k === "goal" || k === "assumptions" ? 3 : 2, "data-key": `bf-${k}`,
+          onInput: (e) => { draftBrief[k] = e.target.value; } }, draftBrief[k] || "")));
+    } else dl.append(h("dt", null, label), h("dd", null, b[k] || "—"));
+  }
+  const cols = "grid-template-columns:1.4fr 1.3fr 1.6fr 1.2fr";
+  const plan = h("div", { class: "scroll-x" }, h("div", { class: "gtable", role: "table", "aria-label": "Section plan" },
+    h("div", { class: "gr head", role: "row", style: cols }, ...["Section", "Written by", "Tools", "Consults"].map((t) => h("div", { role: "columnheader" }, t))),
+    S.sections.map((s) => h("div", { class: "gr", role: "row", style: cols },
+      h("div", { role: "cell", style: "font-weight:600" }, s.name),
+      h("div", { role: "cell", class: "who" }, avatar(s.owner, 24, 10), roleInfo(s.owner).name),
+      h("div", { role: "cell", style: "color:var(--text-2)" }, toolsFor(s.owner)),
+      h("div", { role: "cell", style: "color:var(--text-2)" }, consultCell(s))))));
+
+  const g = guardrails();
+  const aside = h("aside", { class: "card side p22", "aria-labelledby": "appr-h" },
+    h("h2", { id: "appr-h", class: "h2" }, "What you're approving"),
+    h("div", { class: "grid2" },
+      h("div", { class: "stat" }, h("div", { class: "xs muted" }, "Token budget"), h("div", { class: "v" }, fmtNumber(g.maxTokens)), h("div", { class: "xs muted" }, "Input + output, whole run")),
+      h("div", { class: "stat" }, h("div", { class: "xs muted" }, "Turn limit"), h("div", { class: "v" }, String(g.maxTurns)), h("div", { class: "xs muted" }, "Model calls, whole run"))),
+    h("div", { class: "stack-6" }, h("div", { class: "small", style: "font-weight:600" }, "The run stops when"),
+      h("ul", { style: "margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--text-2)" },
+        h("li", null, "every section is approved, or"),
+        h("li", null, `the token budget (${fmtNumber(g.maxTokens)}) or turn limit (${g.maxTurns}) is reached, or`),
+        h("li", null, `nothing progresses for ${g.noProgressTurns} turns.`))),
+    h("div", { class: "stack-6" }, h("div", { class: "small", style: "font-weight:600" }, "Rules during the run"),
+      h("ul", { style: "margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--text-2)" },
+        h("li", null, `The Critic can send a section back up to ${plural(g.criticRounds, "time")}.`),
+        h("li", null, "Questions nobody can answer go to Open questions."),
+        h("li", null, "Agents only message along the team's handoff rules", S.teamRef ? [" (", teamLabel(), ")"] : null, "."))),
+    filesBlock(),
+    h("p", { class: "notice warn" }, "Once approved, the team works on its own. You can stop the run, but not steer it."),
+    errorBox(),
+    h("div", { class: "stack-6", style: "gap:8px" },
+      h("button", { type: "button", class: "btn primary tall block", "data-key": "approve", disabled: busy === "approve", onClick: approve },
+        icon("play"), busy === "approve" ? "Approving…" : editing ? "Approve edited brief and run" : "Approve and run"),
+      h("button", { type: "button", class: "btn tall block", "data-key": "edit", "aria-pressed": String(editing), onClick: () => { editing = !editing; draftBrief = editing ? { ...b } : null; render(); } },
+        editing ? "Discard edits" : "Edit brief")));
+
+  return h("div", { class: "row" },
+    h("div", { class: "grow" },
+      h("section", { class: "card p22", "aria-labelledby": "brief-h" },
+        h("div", { style: "display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap" },
+          h("h2", { id: "brief-h", class: "h2 lg" }, "Brief"),
+          h("div", { class: "small muted", style: "display:flex;align-items:center;gap:8px" }, avatar(coordId(), 26, 11), `Drafted by ${roleInfo(coordId()).name}`)),
+        h("p", { class: "small muted", style: "margin:0;overflow-wrap:anywhere" }, "Your task: ", S.task),
+        dl),
+      h("section", { class: "card p22", "aria-labelledby": "plan-h" },
+        h("h2", { id: "plan-h", class: "h2 lg" }, "Section plan"),
+        h("p", { class: "muted", style: "margin:0;font-size:14px" }, `The ${runOutput().name} sections: who writes each one, with which tools, and who they may consult. Every section except Open questions is reviewed by the Critic.`),
+        plan)),
+    aside);
+}
+
+// ---------- Run view ----------
+/** Running or finished run: meters, stop/fail notice, latest send-back, then the trace or the document. */
+function renderRun() {
+  const wrap = h("div", { class: "stack", style: "gap:18px" });
+  wrap.append(renderMeters());
+  if (S.status === "stopped" || S.status === "failed") {
+    wrap.append(h("div", { class: `notice ${S.status === "failed" ? "fail" : "err"}` }, icon("warn"),
+      h("span", null, h("strong", null, S.status === "failed" ? "Run failed. " : "Run stopped. "), S.stopReason || "No reason was recorded.")));
+  }
+  const alert = renderAlert();
+  if (alert) wrap.append(alert);
+  const err = errorBox();
+  if (err) wrap.append(err);
+  wrap.append(currentView() === "document" ? renderDocument() : h("div", { class: "row tight" }, renderTrace(), renderSpanAside()));
+  return wrap;
+}
+
+function meter(label, value, limit, pct, color) {
+  return h("div", { class: "meter" },
+    h("div", { class: "top" }, h("span", { class: "label" }, label), h("span", { class: "limit" }, limit)),
+    h("div", { class: "value" }, value),
+    h("div", { class: "track", "aria-hidden": "true" }, h("div", { class: "fill", style: `width:${Math.max(0, Math.min(100, pct))}%;background:${color}` })));
+}
+/** Turns, tokens, approved sections and review rounds against the guardrails. */
+function renderMeters() {
+  const t = S.totals, g = guardrails(), tokens = t.inputTokens + t.outputTokens;
+  const warn = (p) => p >= 90 ? "#C2410C" : "#2F4ACF";
+  const turnPct = g.maxTurns ? (t.turns / g.maxTurns) * 100 : 0;
+  const tokPct = g.maxTokens ? (tokens / g.maxTokens) * 100 : 0;
+  const rev = reviewable().length;
+  return h("div", { class: "meters", role: "group", "aria-label": "Run meters" },
+    meter("Turns", fmtNumber(t.turns), `max ${g.maxTurns}`, turnPct, warn(turnPct)),
+    meter("Tokens", fmtNumber(tokens), `max ${fmtNumber(g.maxTokens)}`, tokPct, warn(tokPct)),
+    meter("Sections approved", `${t.sectionsApproved} of ${rev}`, "Open questions not reviewed", rev ? (t.sectionsApproved / rev) * 100 : 0, "#237032"),
+    meter("Review rounds used", fmtNumber(t.reviewRoundsUsed), `max ${g.criticRounds} per section`, g.criticRounds ? (maxSentBackPerSection() / g.criticRounds) * 100 : 0, "#C2410C"));
+}
+
+/** Bar about the latest Critic send-back, with a link to its span. */
+function renderAlert() {
+  const sb = sentBackSpans();
+  if (!sb.length) return null;
+  const sp = sb[sb.length - 1];
+  const sec = secById(sp.sectionId);
+  const owner = sec ? roleInfo(sec.owner).name : "its writer";
+  const round = sb.filter((x) => x.sectionId === sp.sectionId && x.id <= sp.id).length;
+  const reviews = sec && sec.reviews ? sec.reviews.filter((r) => r.verdict === "sent_back") : [];
+  const note = (reviews[round - 1] && reviews[round - 1].note) || sp.why || sp.output;
+  const since = sec && sec.status === "approved" ? " Since approved." : "";
+  return h("div", { class: "alert-bar" }, icon("warn"),
+    h("span", null, h("strong", null, `Critic sent ${sec ? sec.name : "a section"} back to ${owner}`), ` (round ${round} of ${guardrails().criticRounds}): `, note, since),
+    h("button", { type: "button", class: "linkbtn", "data-key": "show-span", onClick: () => pickSpan(sp.id, { toTrace: true, clearFilter: true }) }, "Show span"));
+}
+
+// ---------- Trace ----------
+function visibleSpans() {
+  return spanFilter ? S.spans.filter((s) => spanFilter.ids.has(s.id)) : S.spans;
+}
+/** Trace card: tab list (graph, waterfall, log, agents) and the active tab, with the section filter bar. */
+function renderTrace() {
+  const tabs = [["graph", "Graph"], ["waterfall", "Waterfall"], ["log", "Log"]];
+  if (hasAgents()) tabs.push(["agents", "Agents"]);
+  else if (traceTab === "agents") traceTab = "waterfall";
+  const tablist = h("div", { class: "seg", role: "tablist", "aria-label": "Trace view" },
+    tabs.map(([k, label]) => h("button", {
+      type: "button", role: "tab", id: `tab-${k}`, "aria-selected": String(traceTab === k), "aria-controls": "trace-body",
+      tabindex: traceTab === k ? "0" : "-1", "data-key": `tab-${k}`,
+      onClick: () => { traceTab = k; render(); },
+      onKeydown: (e) => {
+        const i = tabs.findIndex((t) => t[0] === traceTab);
+        const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+        if (!d) return;
+        e.preventDefault(); traceTab = tabs[(i + d + tabs.length) % tabs.length][0]; render();
+        const el = $(`tab-${traceTab}`); if (el) el.focus();
+      }
+    }, label)));
+  const spans = visibleSpans();
+  let body;
+  if (!S.spans.length) body = h("p", { class: "muted" }, "No spans yet.");
+  else if (traceTab === "graph") body = renderGraph();
+  else if (traceTab === "agents") body = renderAgents();
+  else if (traceTab === "log") body = renderLog(spans, true);
+  else body = renderWaterfall(spans);
+  return h("section", { id: "trace-card", class: "card p18", style: "flex:999 1 660px", "aria-labelledby": "trace-h" },
+    h("div", { style: "display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px" },
+      h("h2", { id: "trace-h", class: "h2" }, "Trace"), tablist),
+    spanFilter && traceTab !== "graph" && traceTab !== "agents" ? h("div", { class: "filter-bar" },
+      `Showing ${plural(spans.length, "span")} for ${secName(spanFilter.sectionId)}`,
+      h("button", { type: "button", class: "btn sm", "data-key": "clear-filter", onClick: () => { spanFilter = null; render(); } }, "Show all spans")) : null,
+    h("div", { id: "trace-body", role: "tabpanel", "aria-labelledby": `tab-${traceTab}` }, body));
+}
+
+/** Waterfall bar [fill, border] colours for a span. */
+function barStyle(sp) {
+  const c = roleInfo(sp.role).color;
+  if (sp.status === "sent_back") return ["#C2410C", "#7C2D12"];
+  if (sp.status === "failed") return ["#FCEBEA", "#B42318"];
+  if (sp.kind === "system") return ["#D4D1C6", "#A9A597"];
+  if (sp.kind === "tool" || sp.kind === "msg") return ["#FFFFFF", c];
+  return [c, c];
+}
+/** " · Status" after a span label, except for the unremarkable done / approved review. */
+function statusSuffix(sp) {
+  return sp.status === "done" || sp.status === "approved" && sp.kind === "review" ? "" : ` · ${(SPAN_STATUS[sp.status] || {}).label || sp.status}`;
+}
+/** Waterfall tab: one bar per span on a shared time axis, indented by causal depth. */
+function renderWaterfall(spans) {
+  const total = Math.max(1, nowMs());
+  const ticks = [0, total / 3, (2 * total) / 3, total];
+  const axis = h("div", { class: "wf-axis", "aria-hidden": "true" }, ticks.map((t, i) =>
+    h("span", { style: `left:${(t / total) * 100}%` }, fmtDur(t) + (i === 3 && isLive() ? " now" : ""))));
+  const rows = spans.map((sp) => {
+    const [bg, bd] = barStyle(sp);
+    const dur = spanDur(sp);
+    const left = (sp.startMs / total) * 100, width = Math.max((dur / total) * 100, 0.8);
+    const r = roleInfo(sp.role);
+    const nMem = usedIds(sp).length;
+    const label = `${r.name}: ${sp.action}. ${(SPAN_STATUS[sp.status] || {}).label || sp.status}, ${(SPAN_KIND[sp.kind] || sp.kind).toLowerCase()}, started ${fmtDur(sp.startMs)}, ${fmtPreciseDur(dur)}${nMem ? `, used ${plural(nMem, "memory", "memories")}` : ""}`;
+    return h("button", { type: "button", class: "wf-row", "aria-pressed": String(sp.id === selSpan), "aria-label": label, "data-key": `wf-${sp.id}`, onClick: () => pickSpan(sp.id) },
+      h("span", { class: "wf-label", style: `padding-left:${sp.depth * 14}px` }, avatar(sp.role, 22, 10),
+        h("span", { class: "t" }, sp.action, h("span", { class: "muted" }, statusSuffix(sp))), nMem ? memMark(sp)[0] : null),
+      h("span", { class: "wf-track" }, h("span", {
+        class: "wf-bar" + (sp.status === "running" ? " live" : ""),
+        style: `left:${Math.min(left, 99.2)}%;width:${Math.min(width, 100 - Math.min(left, 99.2))}%;background:${bg};border-color:${bd}`
+      })));
+  });
+  return h("div", { class: "stack" },
+    h("div", { class: "scroll-x" }, h("div", { class: "wf" },
+      h("div", { class: "wf-head" }, h("div", null, "Span"), axis),
+      rows.length ? rows : h("p", { class: "muted" }, "No spans match."))),
+    h("div", { class: "legend" },
+      h("span", null, h("i", { style: "background:#5F3DC4" }), "Agent work"),
+      h("span", null, h("i", { style: "background:#fff;border:2px solid #5F3DC4" }), "Tool call or message"),
+      h("span", null, h("i", { style: "background:#C2410C;border:2px solid #7C2D12" }), "Sent back"),
+      h("span", null, h("i", { style: "background:#FCEBEA;border:2px solid #B42318" }), "Failed"),
+      h("span", null, h("i", { style: "background:#D4D1C6;border:2px solid #A9A597" }), "System"),
+      S.spans.some((x) => usedIds(x).length) ? h("span", null, h("span", { class: "mem-mark", "aria-hidden": "true" }, icon("memory"), "n"), "Used n memories from earlier runs") : null,
+      isLive() ? h("span", null, h("i", { class: "wf-bar live", style: "position:static;background:#2F4ACF;border-color:#2F4ACF" }), "Running (pulsing)") : null));
+}
+
+/** Log tab: spans newest first with their reason; interactive rows select a span. */
+function renderLog(spans, interactive) {
+  const items = [...spans].sort((a, b) => b.startMs - a.startMs || b.id - a.id).map((sp) => {
+    const r = roleInfo(sp.role);
+    const inner = [
+      h("span", { class: "at" }, fmtDur(sp.startMs)),
+      avatar(sp.role, 28, 11),
+      h("span", { class: "body" }, h("span", { class: "ttl" }, `${r.name} · ${sp.action}`, usedIds(sp).length ? " " : null, memMark(sp)), sp.why ? h("span", { class: "why" }, sp.why) : null),
+      spanStatusPill(sp.status)];
+    return h("li", null, interactive
+      ? h("button", { type: "button", class: "log-item", "aria-pressed": String(sp.id === selSpan), "data-key": `log-${sp.id}`, onClick: () => pickSpan(sp.id) }, inner)
+      : h("div", { class: "log-item", style: "cursor:default" }, inner));
+  });
+  return h("ol", { class: "log", "aria-label": "Spans, newest first" }, items.length ? items : h("li", { class: "muted" }, "No spans match."));
+}
+
+// Graph: roles as nodes, handoff traffic as edges (message counts from msg spans, reviews from Critic spans).
+/** Node positions from the run's team: coordinator at the top, Critic in the bottom row, specialists around them
+ * (a pentagon for five members: 1st specialist left, last right, the one between bottom-left). */
+function graphLayout() {
+  const roles = teamRoles(teamCfg()), coord = coordId();
+  const mid = roles.filter((id) => id !== coord && id !== "C");
+  const GP = { [coord]: [320, 50] };
+  if (mid.length === 3) {
+    GP[mid[0]] = [100, 200]; GP[mid[2]] = [540, 200]; GP[mid[1]] = [190, 400];
+    if (roles.includes("C")) GP.C = [450, 400];
+    return GP;
+  }
+  if (roles.includes("C")) GP.C = [320, 420];
+  const xs = mid.length === 1 ? [320] : mid.map((_, i) => 90 + (460 * i) / (mid.length - 1));
+  mid.forEach((id, i) => { GP[id] = [xs[i], 220]; });
+  return GP;
+}
+/** Quadratic control point: straight, unless the line would cross another node, then bowed sideways. */
+function ctrlPoint(GP, a, b) {
+  const p1 = GP[a], p2 = GP[b], c = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+  const dx = p2[0] - p1[0], dy = p2[1] - p1[1], len = Math.hypot(dx, dy) || 1;
+  const blocked = Object.entries(GP).some(([k, q]) => {
+    if (k === a || k === b) return false;
+    const t = Math.max(0, Math.min(1, ((q[0] - p1[0]) * dx + (q[1] - p1[1]) * dy) / (len * len)));
+    return Math.hypot(p1[0] + t * dx - q[0], p1[1] + t * dy - q[1]) < 70;
+  });
+  return blocked ? [c[0] + (-dy / len) * 150, c[1] + (dx / len) * 150] : c;
+}
+/** The role a message span went to: its delivered target, the role of the span it caused, or a name in its action. */
+function msgTarget(sp) {
+  if (sp.delivered && sp.delivered.to) return sp.delivered.to;
+  const child = S.spans.find((x) => x.parentId === sp.id && x.role !== sp.role);
+  if (child) return child.role;
+  const hit = teamRoles(teamCfg()).map(roleInfo).find((r) => r.id !== sp.role && sp.action.includes(r.name));
+  return hit ? hit.id : null;
+}
+/** Traffic between members, keyed "A|B" (sorted): messages delivered, reviews, and how many reviews sent work back. */
+function graphTraffic(GP) {
+  const edges = new Map();
+  const edge = (a, b) => { const k = [a, b].sort().join("|"); if (!edges.has(k)) edges.set(k, { a, b, msgs: 0, reviews: 0, sentBack: 0 }); return edges.get(k); };
+  for (const sp of S.spans) {
+    if (sp.kind === "msg") { const to = msgTarget(sp); if (to && GP[to] && GP[sp.role] && to !== sp.role) edge(sp.role, to).msgs++; }
+    if (sp.kind === "review" && sp.sectionId) {
+      const sec = secById(sp.sectionId);
+      if (sec && sec.owner !== sp.role && GP[sec.owner] && GP[sp.role]) { const e = edge(sp.role, sec.owner); e.reviews++; if (sp.status === "sent_back") e.sentBack++; }
+    }
+  }
+  return edges;
+}
+/** One member node of the graph: avatar (ringed while active), name, agent, turns/tokens, and what it is doing. */
+function graphNode(k, pos) {
+  const r = roleInfo(k), mine = S.spans.filter((s) => s.role === k);
+  const latest = mine[mine.length - 1];
+  const turns = mine.filter((s) => s.model !== null).length;
+  const tok = mine.reduce((a, s) => a + s.inputTokens + s.outputTokens, 0);
+  const runningSpan = mine.find((s) => s.status === "running");
+  const active = isLive() && (S.activeRole === k || !!runningSpan);
+  const st = runningSpan ? [`Working: ${runningSpan.action}`, "#1F338F"] : latest ? [`Last: ${latest.action}`, "#5B5B66"] : ["No turns yet", "#5B5B66"];
+  return h("button", {
+    type: "button", class: "node", "data-key": `node-${k}`, disabled: !latest,
+    "aria-label": `${r.name}${agentOf(k) ? ` (agent ${agentOf(k)})` : ""}: ${turns} turns, ${fmtNumber(tok)} tokens. ${st[0]}.${latest ? " Show latest span." : ""}`,
+    style: `left:${pos[0] - 60}px;top:${pos[1] - 34}px`,
+    onClick: () => latest && pickSpan(latest.id)
+  },
+    h("span", { class: "avatar", "aria-hidden": "true", style: `background:${r.color};box-shadow:${active ? `0 0 0 4px #fff, 0 0 0 7px ${r.color}` : "0 0 0 4px #fff"}` }, r.initials),
+    h("span", { class: "n1" }, r.name),
+    agentOf(k) ? h("span", { class: "n0", title: `Agent ${agentOf(k)}` }, agentOf(k)) : null,
+    h("span", { class: "n2" }, `${plural(turns, "turn")} · ${fmtNumber(tok)} tok`),
+    h("span", { class: "n3", style: `color:${st[1]};max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap` }, st[0]));
+}
+/** Graph tab: members as nodes, traffic as labelled edges, idle allowed consults as dotted lines. */
+function renderGraph() {
+  const GP = graphLayout();
+  const edges = graphTraffic(GP);
+  // Consult rules of the team version with no traffic yet: thin dotted lines (allowed, unused).
+  const rules = teamCfg().rules;
+  const pairs = consultPairsOf(teamCfg());
+  const idle = pairs.filter((p) => consultPairOn(rules, p.a, p.b) && !edges.has([p.a, p.b].sort().join("|")));
+  const offPairs = pairs.filter((p) => !consultPairOn(rules, p.a, p.b));
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  for (const p of idle) {
+    if (!GP[p.a] || !GP[p.b]) continue;
+    const p1 = GP[p.a], p2 = GP[p.b], c = ctrlPoint(GP, p.a, p.b);
+    const path = document.createElementNS(NS, "path");
+    path.setAttribute("d", `M${p1[0]},${p1[1]} Q${c[0]},${c[1]} ${p2[0]},${p2[1]}`);
+    path.setAttribute("fill", "none"); path.setAttribute("stroke", "#D4D1C6"); path.setAttribute("stroke-width", "1.5"); path.setAttribute("stroke-dasharray", "2 5");
+    svg.appendChild(path);
+  }
+  svg.setAttribute("width", "640"); svg.setAttribute("height", "500"); svg.setAttribute("aria-hidden", "true");
+  const labels = [];
+  for (const e of edges.values()) {
+    const p1 = GP[e.a], p2 = GP[e.b];
+    const c = ctrlPoint(GP, e.a, e.b);
+    const mid = [0.25 * p1[0] + 0.5 * c[0] + 0.25 * p2[0], 0.25 * p1[1] + 0.5 * c[1] + 0.25 * p2[1]];
+    const review = e.reviews > 0 && !e.msgs;
+    const hot = e.sentBack > 0;
+    const color = hot ? "#C2410C" : "#A9A597";
+    const path = document.createElementNS(NS, "path");
+    path.setAttribute("d", `M${p1[0]},${p1[1]} Q${c[0]},${c[1]} ${p2[0]},${p2[1]}`);
+    path.setAttribute("fill", "none"); path.setAttribute("stroke", color); path.setAttribute("stroke-width", hot ? "3" : "2");
+    if (review) path.setAttribute("stroke-dasharray", "6 5");
+    svg.appendChild(path);
+    const parts = [];
+    if (e.msgs) parts.push(plural(e.msgs, "msg"));
+    if (e.reviews) parts.push(plural(e.reviews, "review"));
+    if (e.sentBack) parts.push(`${e.sentBack} sent back`);
+    labels.push(h("div", { class: "elabel", style: `left:${mid[0]}px;top:${mid[1]}px;border-color:${color}` }, parts.join(" · ")));
+  }
+  const nodes = Object.keys(GP).map((k) => graphNode(k, GP[k]));
+  return h("div", { class: "stack" },
+    h("div", { class: "graph-wrap" }, h("div", { class: "graph" }, svg, labels, nodes)),
+    h("p", { class: "small muted", style: "margin:0" }, hasAgents() ? "Each node is its own agent, named under its role. Labels count the messages delivered to an agent's inbox along each handoff rule." : "Labels show messages sent along each handoff rule. Dashed lines are review paths; orange means a section was sent back. Dotted lines are consults the team allows but nobody used yet.",
+      offPairs.length ? ` Turned off in ${S.team.version}: ${offPairs.map((p) => `${roleInfo(p.a).name} ↔ ${roleInfo(p.b).name}`).join(", ")}.` : "",
+      " Select an agent to see its latest span."));
+}
+
+/** Span details: why, delivery, memories used, facts, sample-size result, input and output. */
+function renderSpanAside() {
+  const sp = spanById(selSpan);
+  const aside = h("aside", { class: "card p18 side", style: "flex:1 1 360px", "aria-labelledby": "span-h" });
+  if (!sp) { aside.append(h("h2", { id: "span-h", class: "h2" }, "Span details"), h("p", { class: "muted", style: "margin:0" }, "Select a span to see why it happened.")); return aside; }
+  const r = roleInfo(sp.role), dur = spanDur(sp), parent = sp.parentId !== null ? spanById(sp.parentId) : null;
+  const sec = sp.sectionId ? secById(sp.sectionId) : null;
+  const fact = (k, v) => h("div", null, h("dt", null, k), h("dd", null, v));
+  append(aside, [
+    h("div", { style: "display:flex;align-items:center;gap:12px" }, avatar(sp.role, 40),
+      h("div", { style: "min-width:0" }, h("div", { class: "xs muted" }, `Span ${sp.id} · ${r.name}`),
+        h("h2", { id: "span-h", style: "font-size:17px;font-weight:600;line-height:1.3;overflow-wrap:anywhere" }, sp.action))),
+    h("div", { style: "display:flex;flex-wrap:wrap;gap:6px" }, spanStatusPill(sp.status), pill(SPAN_KIND[sp.kind] || sp.kind, "s-chip", { sm: true })),
+    h("div", { class: "why-box" }, h("div", { class: "k" }, "Why this happened"), h("div", { class: "v" }, sp.why || "No reason recorded.")),
+    sp.delivered && sp.delivered.to ? h("div", { class: "deliv" }, icon("inbox"),
+      h("span", null, `Delivered to ${roleInfo(sp.delivered.to).name}'s inbox (${INBOX_KIND[sp.delivered.kind] || sp.delivered.kind})`)) : null,
+    memoriesUsedBox(sp),
+    h("dl", { class: "facts" },
+      sp.agent ? fact("Handled by", h("span", { class: "who", style: "justify-content:flex-end;flex-wrap:wrap" }, avatar(sp.role, 20, 9), agentTag(sp.agent))) : null,
+      fact("Started", fmtDur(sp.startMs)),
+      fact("Duration", sp.status === "running" ? `${fmtPreciseDur(dur)} so far` : fmtPreciseDur(dur)),
+      fact("Caused by", parent
+        ? h("button", { type: "button", class: "linkbtn", style: "padding:0;min-height:24px;text-align:right;color:var(--accent)", "data-key": "parent", onClick: () => pickSpan(parent.id) }, `Span ${parent.id} · ${parent.action}`)
+        : "Run start"),
+      fact("Section", sec ? sec.name : "—"),
+      isSampleSizeSpan(sp) ? fact("Tool", h("span", { class: "who", style: "justify-content:flex-end" }, icon("calc"), TOOL_LABELS.sample_size)) : null,
+      sp.kind === "tool" && fileByName(sp.action) ? fact("File", `${fileByName(sp.action).name} · ${fmtNumber(fileByName(sp.action).chars)} chars`) : null,
+      fact("Tokens in", fmtNumber(sp.inputTokens)),
+      fact("Tokens out", fmtNumber(sp.outputTokens) + (sp.status === "running" ? " so far" : "")),
+      fact("Model", sp.model || "— (no model call)"),
+      fact("Gateway log", sp.gatewayLogId || "—")),
+    isSampleSizeSpan(sp) ? sampleSizeBox(sp) : null,
+    h("div", { class: "io stack-6", style: "gap:4px" }, h("div", { class: "k" }, "Input"), h("pre", null, sp.input || "—")),
+    h("div", { class: "io stack-6", style: "gap:4px" }, h("div", { class: "k" }, "Output"), h("pre", null, sp.output || (sp.status === "running" ? "In progress…" : "—"))),
+    h("button", { type: "button", class: "btn block", "data-key": "see-doc", disabled: !sec, onClick: () => sec && pickSection(sec.id, { toDoc: true, scroll: true }) },
+      sec ? "See it in the document" : "Not tied to a section")]);
+  return aside;
+}
+
+/** The member's memories this turn put in its prompt ("From earlier runs"). */
+function memoriesUsedBox(sp) {
+  const ids = usedIds(sp);
+  if (!sp.agent || !Array.isArray(sp.memoriesUsed)) return null;
+  const head = h("div", { class: "xs muted", style: "font-weight:600;display:flex;align-items:center;gap:6px" }, icon("memory"), ids.length ? `Memories used (${ids.length})` : "Memories used");
+  if (!ids.length) return h("div", { class: "stack-6", style: "gap:4px" }, head, h("p", { class: "small muted", style: "margin:0" }, "None — no earlier memory matched this turn."));
+  const entry = needMember(sp.role);
+  const box = h("div", { class: "stack-6", style: "gap:6px" }, head);
+  if (!entry) box.append(h("p", { class: "small muted", style: "margin:0" }, `Memory ${ids.map((i) => `#${i}`).join(", ")}.`));
+  else if (entry.loading) box.append(h("div", { class: "small muted", style: "display:flex;gap:8px;align-items:center" }, h("span", { class: "spinner", "aria-hidden": "true" }), `Loading ${roleInfo(sp.role).name}'s memories…`));
+  else if (entry.error) box.append(h("p", { class: "small muted", style: "margin:0" }, `Memory ${ids.map((i) => `#${i}`).join(", ")} (texts unavailable: ${entry.error}).`));
+  else {
+    const byId = new Map(entry.view.memories.map((m) => [m.id, m]));
+    box.append(h("ul", { class: "mem-list" }, ids.map((id) => {
+      const m = byId.get(id);
+      return m ? memoryItem(m) : h("li", { class: "mem-item missing" }, `Memory #${id} — no longer stored (the memory was cleared, or it is older than the newest 100).`);
+    })));
+  }
+  return box;
+}
+
+// ---------- Agents in this run ----------
+/** The model(s) a member actually ran on in this run (from its spans), else the one its team version sets. */
+function modelsUsed(roleId, spans) {
+  const used = [...new Set(spans.map((x) => x.model).filter(Boolean))];
+  return used.length ? used : [memberModel(teamCfg(), roleId)];
+}
+/** Agents tab: one row per member with its agent name, model, turns, tokens, messages and memories in this run. */
+function renderAgents() {
+  const teamId = runTeamId();
+  const anyAgentSpan = S.spans.some((x) => x.agent);
+  const rows = teamRoles(teamCfg()).map((id) => {
+    const name = agentOf(id) || (teamId ? memberAgentName(teamId, id) : null);
+    const mine = S.spans.filter((x) => anyAgentSpan ? x.agent === name : x.role === id);
+    const turns = mine.filter((x) => x.model !== null).length;
+    const tokens = mine.reduce((a, x) => a + x.inputTokens + x.outputTokens, 0);
+    const received = S.spans.filter((x) => x.delivered && x.delivered.to === id).length;
+    const used = new Set(mine.flatMap(usedIds));
+    const uses = mine.filter((x) => usedIds(x).length).length;
+    const entry = teamId ? needMember(id) : null;
+    let created;
+    if (!entry || entry.error) created = teamId ? h("a", { href: appLink("/team.html", { id: teamId }) }, "Team editor") : "—";
+    else if (entry.loading) created = h("span", { class: "muted", "aria-label": "Loading" }, "…");
+    else {
+      const mems = entry.view.memories.filter((m) => m.runId === S.runId);
+      created = !mems.length ? h("span", { class: "muted" }, "None")
+        : h("details", null, h("summary", { "data-key": `newmem-${id}` }, `${mems.length} new`), h("ul", { class: "mem-list" }, mems.map((m) => memoryItem(m, { hideRun: true }))));
+    }
+    return h("tr", null,
+      h("td", { class: "full" }, h("div", { class: "who", style: "align-items:flex-start" }, avatar(id, 26, 11),
+        h("div", { style: "min-width:0;display:flex;flex-direction:column;gap:2px" }, h("span", { style: "font-weight:600" }, roleInfo(id).name), name ? agentTag(name) : h("span", { class: "xs muted" }, "No agent")))),
+      h("td", { "data-label": "Model" }, modelsUsed(id, mine).map((mid, i) => [i ? ", " : null, h("span", { class: "model-name", title: mid }, modelInfo(mid).label)])),
+      h("td", { class: "n", "data-label": "Turns" }, fmtNumber(turns)),
+      h("td", { class: "n", "data-label": "Tokens" }, fmtNumber(tokens)),
+      h("td", { class: "n", "data-label": "Messages received" }, fmtNumber(received)),
+      h("td", { class: "n", "data-label": "Memories used", title: uses ? `${plural(used.size, "memory", "memories")} across ${plural(uses, "turn")}` : null }, used.size ? `${used.size} in ${plural(uses, "turn")}` : "0"),
+      h("td", { "data-label": "New memories" }, created));
+  });
+  return h("div", { class: "stack" },
+    h("h3", { class: "h2 plain", style: "margin:0" }, "Agents in this run"),
+    h("p", { class: "small muted", style: "margin:0" }, "Every member is its own agent with its own memory, shared by every run of ",
+      teamId ? h("a", { href: appLink("/team.html", { id: teamId }) }, S.team.name) : S.team.name,
+      ". Model is what each agent ran on in this run (hover for the Workers AI id). Turns and tokens count this run's spans; messages are those delivered to the agent's inbox. New memories are the outcomes and review notes it stored during the run, plus its reflection at the end."),
+    h("div", { class: "scroll-x" }, h("table", { class: "agents" },
+      h("caption", { class: "sr-only" }, "Agents in this run"),
+      h("thead", null, h("tr", null, h("th", { scope: "col" }, "Agent"), h("th", { scope: "col" }, "Model"), h("th", { scope: "col", class: "n" }, "Turns"), h("th", { scope: "col", class: "n" }, "Tokens"),
+        h("th", { scope: "col", class: "n" }, "Messages received"), h("th", { scope: "col", class: "n" }, "Memories used"), h("th", { scope: "col" }, "New memories"))),
+      h("tbody", null, rows))));
+}
+
+/** Sample-size tool result as a small table (the numbers are computed by code, not the model). */
+/** 0.3 → "30%"; non-numbers → "—". */
+const fmtPercent = (p) => typeof p === "number" ? `${+(p * 100).toFixed(2)}%` : "—";
+function sampleSizeBox(sp) {
+  const { req, res } = parseSampleSize(sp);
+  const rows = [];
+  if (req.test === "two_proportions") rows.push(["Test", "Two proportions"], ["Baseline (p1)", fmtPercent(req.p1)], ["Expected (p2)", fmtPercent(req.p2)]);
+  else if (req.test === "two_means") rows.push(["Test", "Two means"], ["Effect size (Cohen's d)", String(req.effectSize ?? "—")]);
+  if (res) {
+    rows.push(["Per group", fmtNumber(res.perGroup)], ["Total", res.total != null ? fmtNumber(res.total) : "—"],
+      ["Significance (α)", res.alpha != null ? String(res.alpha) : "—"], ["Power", res.power != null ? String(res.power) : "—"]);
+  }
+  return h("div", { class: "stack-6", style: "gap:8px" },
+    h("div", { class: "xs muted", style: "font-weight:600" }, "Sample-size result"),
+    res || rows.length ? h("table", { class: "ss-table" }, h("caption", { class: "sr-only" }, "Sample-size calculation"),
+      h("tbody", null, rows.map(([k, v]) => h("tr", null, h("th", { scope: "row" }, k), h("td", { class: "tabular" }, v))))) : null,
+    res && res.explanation ? h("p", { class: "small", style: "margin:0;color:var(--text-2)" }, res.explanation) : null,
+    !res ? h("p", { class: "small muted", style: "margin:0" }, sp.status === "running" ? "Calculating…" : "No result recorded.") : null,
+    h("p", { class: "xs muted", style: "margin:0" }, "Two-sided test, normal approximation. Computed by code, not by the model."));
+}
+
+// ---------- Document ----------
+/** Open questions: the Open questions section's lines, else the run's openQuestions list. */
+function openQuestionLines() {
+  const sec = S.sections.find((s) => s.id === "open");
+  if (sec && sec.content.length) return sec.content;
+  return (S.openQuestions || []).map((q) => `${q.question} (raised by ${roleInfo(q.raisedBy).name})`);
+}
+function sectionLines(sec) { return sec.id === "open" ? openQuestionLines() : sec.content; }
+/** [short status, colour] for the section nav; empty when there is nothing to flag. */
+function sectionFlag(sec) {
+  if (sec.id === "open" || sec.status === "open") { const n = openQuestionLines().length; return n ? [`${n} open`, "#7A4B00"] : ["", ""]; }
+  if (sec.status === "approved") return sec.rounds > 1 ? [`${sec.rounds} rounds`, "#9A3412"] : ["", ""];
+  if (sec.status === "sent_back") return ["Sent back", "#9A3412"];
+  return [SECTION_STATUS[sec.status] || sec.status, sec.status === "pending" ? "#5B5B66" : "#1F338F"];
+}
+/** How a section's review went, in words. */
+function reviewText(sec) {
+  if (sec.id === "open" || sec.status === "open") return "Not reviewed (collected questions)";
+  if (sec.status === "approved") return sec.rounds > 1 ? `Approved after ${sec.rounds} rounds` : "Approved first time";
+  const sb = sec.reviews.filter((r) => r.verdict === "sent_back").length;
+  return `${SECTION_STATUS[sec.status] || sec.status}${sb ? ` · sent back ${plural(sb, "time")}` : ""}`;
+}
+/** Provenance chip text next to a section heading. */
+function chipText(sec) {
+  const n = roleInfo(sec.owner).name;
+  if (sec.id === "open" || sec.status === "open") return `${n} · open questions`;
+  if (sec.status === "approved") return sec.rounds > 1 ? `${n} · ${sec.rounds} review rounds` : `${n} · approved`;
+  return `${n} · ${(SECTION_STATUS[sec.status] || sec.status).toLowerCase()}`;
+}
+
+/** Document view: section nav, the document, and the selected section's provenance. */
+function renderDocument() {
+  const nav = h("nav", { class: "sec-nav", "aria-label": "Sections" }, h("div", { class: "eyebrow", style: "padding:4px 8px 8px" }, "Sections"),
+    S.sections.map((s) => {
+      const [flag, color] = sectionFlag(s);
+      return h("button", { type: "button", "aria-current": String(s.id === selSection), "data-key": `nav-${s.id}`, onClick: () => pickSection(s.id, { scroll: true }) },
+        avatar(s.owner, 22, 10), h("span", { class: "nm" }, s.name), flag ? h("span", { class: "flag", style: `color:${color}` }, flag) : null);
+    }));
+  const article = h("article", { class: "doc", "aria-label": "Document" },
+    S.sections.map((s) => {
+      const lines = sectionLines(s);
+      return h("section", { id: `doc-${s.id}`, class: "doc-sec" + (s.id === selSection ? " on" : ""), "aria-labelledby": `doc-h-${s.id}` },
+        h("div", { class: "hd" }, h("h2", { id: `doc-h-${s.id}` }, s.name),
+          h("button", { type: "button", class: "prov-chip", "aria-label": `Show provenance for ${s.name}`, "aria-pressed": String(s.id === selSection), "data-key": `chip-${s.id}`, onClick: () => pickSection(s.id) },
+            avatar(s.owner, 18, 9), chipText(s))),
+        lines.length ? h("ul", null, lines.map((l) => h("li", null, l)))
+          : h("p", { class: "muted", style: "margin:0;font-style:italic" }, s.status === "pending" ? "Not written yet." : s.id === "open" ? "No open questions." : "Being drafted…"));
+    }));
+  return h("div", { class: "row tight" }, nav, article, renderProvenance());
+}
+
+/** Provenance of the selected section: writer, consults, review, sources, and what each send-back changed. */
+function renderProvenance() {
+  const sec = secById(selSection);
+  const aside = h("aside", { class: "card p18 side", style: "flex:1 1 320px", "aria-labelledby": "prov-h" });
+  if (!sec) { aside.append(h("h2", { id: "prov-h", class: "h2" }, "Provenance"), h("p", { class: "muted" }, "Select a section.")); return aside; }
+  const fact = (k, v) => h("div", null, h("dt", null, k), h("dd", null, v));
+  const sentBack = sec.reviews.filter((r) => r.verdict === "sent_back");
+  aside.append(
+    h("div", { class: "eyebrow" }, "Provenance"),
+    h("h2", { id: "prov-h", class: "h2 lg" }, sec.name),
+    h("dl", { class: "facts" },
+      fact("Written by", h("span", { class: "who", style: "justify-content:flex-end" }, avatar(sec.owner, 20, 9), roleInfo(sec.owner).name)),
+      fact("Consulted", sec.consulted.length ? listNames(sec.consulted) : "—"),
+      fact("Review", reviewText(sec)),
+      fact("Tokens", fmtNumber(sec.tokens))),
+    h("div", { class: "stack-6" }, h("div", { class: "xs muted", style: "font-weight:600" }, "Built from"),
+      sec.sources.length ? sec.sources.map((src) => {
+        const f = fileByName(src);
+        const calc = isSampleSizeSource(src);
+        return h("div", { class: "source" }, icon(f ? "file" : calc ? "calc" : "tool"),
+          h("span", { style: "flex:1;min-width:0" }, src, calc ? h("span", { class: "xs muted", style: "display:block" }, "Sample-size calculator (code, not the model)") : null, f ? h("span", { class: "xs muted", style: "display:block" }, `Uploaded file · ${fmtNumber(f.chars)} chars${f.truncated ? " (cut at 60,000)" : ""}`) : null));
+      })
+        : h("p", { class: "small muted", style: "margin:0" }, "Nothing recorded yet.")));
+  if (sentBack.length) {
+    const box = h("div", { class: "stack-6", style: "gap:8px" },
+      h("div", { style: "display:flex;justify-content:space-between;align-items:center;gap:8px" },
+        h("div", { class: "xs muted", style: "font-weight:600" }, "What the review changed"),
+        h("button", { type: "button", class: "btn sm", "aria-pressed": String(showDiff), "data-key": "diff", onClick: () => { showDiff = !showDiff; render(); } },
+          showDiff ? "Hide before / after" : "Show before / after")));
+    sentBack.forEach((r, i) => {
+      const after = sentBack[i + 1] ? sentBack[i + 1].before : sec.content;
+      if (r.note && r.note.trim()) box.append(h("div", { class: "notice err", style: "display:block;font-size:13px;padding:10px 12px" }, h("strong", null, `Critic, round ${r.round}: `), r.note));
+      if (showDiff) box.append(h("div", { class: "diff" },
+        h("div", { class: "before" }, h("strong", null, "Before:"), r.before.length ? h("ul", null, r.before.map((l) => h("li", null, l))) : " —"),
+        h("div", { class: "after" }, h("strong", null, sentBack[i + 1] ? "Next draft:" : "After:"),
+          after.length ? h("ul", null, after.map((l) => h("li", null, l))) : " Not revised yet.")));
+    });
+    aside.append(box);
+  }
+  aside.append(h("button", { type: "button", class: "btn block", "data-key": "open-spans", disabled: !sec.spanIds.length, onClick: () => openSectionSpans(sec) },
+    sec.spanIds.length ? `Open its ${plural(sec.spanIds.length, "span")} in the trace` : "No spans yet"));
+  return aside;
+}
+
+// ---------- Export ----------
+/** The document as Markdown, with a provenance line under each section. */
+function toMarkdown() {
+  const outName = runOutput().name;
+  const out = [`# ${S.title || outName}`, "", `_${outName} · ${S.team.name} ${S.team.version} · ${(RUN_STATUS[S.status] || {}).label || S.status} · ${fmtDateTime(S.endedAt || S.createdAt)}_`, ""];
+  if (S.brief && S.brief.goal) out.push(`> ${S.brief.goal.replace(/\n/g, " ")}`, "");
+  if (runFiles().length) out.push(`_Context files: ${runFiles().map((f) => f.name).join(", ")}_`, "");
+  for (const s of S.sections) {
+    out.push(`## ${s.name}`, "");
+    const lines = sectionLines(s);
+    if (lines.length) lines.forEach((l) => out.push(`- ${String(l).replace(/\n+/g, " ")}`));
+    else out.push("_Not written._");
+    const prov = [`Written by ${roleInfo(s.owner).name}`];
+    if (s.consulted.length) prov.push(`consulted ${listNames(s.consulted)}`);
+    prov.push(reviewText(s).toLowerCase().replace(/^./, (c) => c.toLowerCase()), `${fmtNumber(s.tokens)} tokens`);
+    out.push("", `_${prov.join(" · ")}_`, "");
+  }
+  out.push("---", `_Generated by Team Agents Kit · run ${S.runId} · ${S.totals.turns} turns · ${fmtNumber(S.totals.inputTokens + S.totals.outputTokens)} tokens_`, "");
+  return out.join("\n");
+}
+function exportMarkdown() {
+  const slug = (S.title || runOutput().id).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || runOutput().id;
+  const url = URL.createObjectURL(new Blob([toMarkdown()], { type: "text/markdown;charset=utf-8" }));
+  const a = h("a", { href: url, download: `${slug}.md` });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  $("toast").textContent = "Markdown file downloaded.";
+}
+async function copyMarkdown() {
+  try { await navigator.clipboard.writeText(toMarkdown()); $("toast").textContent = "Document copied as Markdown."; flashButtonLabel("copy", "Copied"); }
+  catch { $("toast").textContent = "Could not copy. Use Export Markdown instead."; flashButtonLabel("copy", "Copy failed"); }
+}
+/** Briefly replace a button's label (e.g. "Copied"); the next render restores it. */
+function flashButtonLabel(key, text) {
+  const b = document.querySelector(`[data-key="${key}"]`);
+  if (!b) return;
+  b.replaceChildren(icon("copy"), text);
+  setTimeout(() => render(), 1500);
+}
+
+// ---------- Live clock ----------
+// While the run is live, tick the status pill and redraw the waterfall so running bars grow.
+setInterval(() => {
+  if (!S || !isLive()) return;
+  const p = $("pill"); if (p) p.replaceChildren(statusPillNow());
+  if (S.status === "running" && currentView() === "trace" && (traceTab === "waterfall")) {
+    keepFocus(() => { const b = $("trace-body"); if (b) b.replaceChildren(renderWaterfall(visibleSpans())); });
+  }
+}, 1000);
+window.addEventListener("online", () => live && live.retryNow());
+
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [7 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Length 4902 >>
+stream
+BT /F2 16 Tf 56 762 Td (Onboarding and early retention: summary of prior evidence) Tj ET
+BT /F1 10 Tf 56 744.5 Td (Fictional test data for the Team Agents Kit   . Tallyfox and every study below are invented; no) Tj ET
+BT /F1 10 Tf 56 731 Td (real publications are cited.) Tj ET
+BT /F1 10 Tf 56 717.5 Td (Tallyfox UX Research Team - literature and prior-work summary - November 2026) Tj ET
+BT /F2 12 Tf 56 689.5 Td (Context) Tj ET
+BT /F1 10 Tf 56 676 Td (Tallyfox is a budgeting and invoicing app for freelancers \(iOS, Android, web\). New users) Tj ET
+BT /F1 10 Tf 56 662.5 Td (currently see a 4-screen welcome carousel and then an empty dashboard. Product wants to test an) Tj ET
+BT /F1 10 Tf 56 649 Td (onboarding checklist: a card on the dashboard with 4 steps \(add your first expense, connect a) Tj ET
+BT /F1 10 Tf 56 635.5 Td (bank account, create your first invoice, set a monthly budget\), each ticked off when done.) Tj ET
+BT /F2 12 Tf 56 607.5 Td (How Tallyfox defines week-1 retention \(use this definition\)) Tj ET
+BT /F1 10 Tf 56 594 Td (A new user is retained in week 1 if they perform at least one meaningful action on any day from) Tj ET
+BT /F1 10 Tf 56 580.5 Td (day 7 to day 13 after signup \(signup day = day 0\). Meaningful actions are: log an expense,) Tj ET
+BT /F1 10 Tf 56 567 Td (create or send an invoice, connect or refresh a bank account, edit a budget. Opening the app) Tj ET
+BT /F1 10 Tf 56 553.5 Td (without one of these actions does not count. This definition was fixed by the analytics guild in) Tj ET
+BT /F1 10 Tf 56 540 Td (March 2026 \(metric id RET-W1-v2\) and is the one used in the baseline cohort file.) Tj ET
+BT /F2 12 Tf 56 512 Td (Study A - internal "Getting started tips" test, Tallyfox, spring 2025) Tj ET
+BT /F1 10 Tf 58 498.5 Td (-) Tj ET
+BT /F1 10 Tf 70 498.5 Td (Design: randomised A/B, 2 weeks of enrolment, new mobile signups.) Tj ET
+BT /F1 10 Tf 58 485 Td (-) Tj ET
+BT /F1 10 Tf 70 485 Td (Treatment: three dismissible tip cards on the dashboard \(not a checklist\).) Tj ET
+BT /F1 10 Tf 58 471.5 Td (-) Tj ET
+BT /F1 10 Tf 70 471.5 Td (Sample: 1,212 users in total \(about 600 per group\).) Tj ET
+BT /F1 10 Tf 58 458 Td (-) Tj ET
+BT /F1 10 Tf 70 458 Td (Result: week-1 retention 29.4 percent \(control\) vs 31.5 percent \(tips\), a difference of +2.1) Tj ET
+BT /F1 10 Tf 70 444.5 Td (points, p = 0.42. Not significant; the study was underpowered for effects below about 7) Tj ET
+BT /F1 10 Tf 70 431 Td (points.) Tj ET
+BT /F1 10 Tf 58 417.5 Td (-) Tj ET
+BT /F1 10 Tf 70 417.5 Td (Lesson recorded: decide the minimum detectable effect and the sample size before launch.) Tj ET
+BT /F2 12 Tf 56 389.5 Td (Study B - external industry report on SaaS checklists \(summarised by our team\)) Tj ET
+BT /F1 10 Tf 58 376 Td (-) Tj ET
+BT /F1 10 Tf 70 376 Td (Across 9 consumer finance and productivity apps, onboarding checklists raised early retention) Tj ET
+BT /F1 10 Tf 70 362.5 Td (by 3 to 8 percentage points relative to no checklist.) Tj ET
+BT /F1 10 Tf 58 349 Td (-) Tj ET
+BT /F1 10 Tf 70 349 Td (Effects were largest when the checklist had 3 to 5 steps and the first step could be) Tj ET
+BT /F1 10 Tf 70 335.5 Td (completed in under a minute.) Tj ET
+BT /F1 10 Tf 58 322 Td (-) Tj ET
+BT /F1 10 Tf 70 322 Td (Effects shrank by about half after the first month \(novelty effect\).) Tj ET
+BT /F2 12 Tf 56 294 Td (Study C - Tallyfox diary study, summer 2026 \(qualitative, 14 participants\)) Tj ET
+BT /F1 10 Tf 58 280.5 Td (-) Tj ET
+BT /F1 10 Tf 70 280.5 Td (New users who connected a bank account in their first session described the app as "already) Tj ET
+BT /F1 10 Tf 70 267 Td (useful"; those who did not often never came back.) Tj ET
+BT /F1 10 Tf 58 253.5 Td (-) Tj ET
+BT /F1 10 Tf 70 253.5 Td (Several participants said they ignore anything that looks like a to-do list from an app \("I) Tj ET
+BT /F1 10 Tf 70 240 Td (already have enough tasks"\).) Tj ET
+BT /F2 12 Tf 56 212 Td (Implications for the new experiment) Tj ET
+BT /F1 10 Tf 58 198.5 Td (-) Tj ET
+BT /F1 10 Tf 70 198.5 Td (An effect of +6 points is plausible but at the upper half of what Study B reports; smaller) Tj ET
+BT /F1 10 Tf 70 185 Td (true effects are likely.) Tj ET
+BT /F1 10 Tf 58 171.5 Td (-) Tj ET
+BT /F1 10 Tf 70 171.5 Td (Measure checklist completion and bank-account connection as secondary metrics to see the) Tj ET
+BT /F1 10 Tf 70 158 Td (mechanism.) Tj ET
+BT /F1 10 Tf 58 144.5 Td (-) Tj ET
+BT /F1 10 Tf 70 144.5 Td (Watch for novelty: if possible, also report retention in week 4 \(day 28 to 34\) as an) Tj ET
+BT /F1 10 Tf 70 131 Td (exploratory metric.) Tj ET
+BT /F1 10 Tf 58 117.5 Td (-) Tj ET
+BT /F1 10 Tf 70 117.5 Td (Avoid Study A's mistake: compute the sample size up front and check it against how many) Tj ET
+BT /F1 10 Tf 70 104 Td (eligible users we can actually enrol.) Tj ET
+BT /F1 8 Tf 56 30 Td (Fictional test data for the Team Agents Kit    - page 1 of 1) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Title (Onboarding and early retention: summary of prior evidence) /Producer (Team Agents Kit    test-case builder) >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000218 00000 n 
+0000000320 00000 n 
+0000000425 00000 n 
+0000005379 00000 n 
+0000005525 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R /Info 8 0 R >>
+startxref
+5662
+%%EOF

@@ -1,0 +1,31 @@
+{
+  "about": "Mechanical checks for score.mjs, mirroring expected.md (ids match the score sheet there). Regexes are case-insensitive.",
+  "allowNames": ["Research Review", "Review Board", "Help Improve", "Improve Tallyfox", "Getting Started", "Settings"],
+  "checks": [
+    { "id": "H1", "level": "must", "where": "section:hypothesis", "label": "Directional hypothesis about the checklist and week-1 retention", "all": ["checklist", "retention"] },
+    { "id": "H2", "level": "must", "where": "section:hypothesis", "label": "States a null hypothesis", "any": ["null", "h0", "no difference", "does not (increase|change|differ)"] },
+    { "id": "V1", "level": "must", "where": "section:variables", "label": "Independent and dependent variables named", "all": ["independent", "dependent"] },
+    { "id": "M1", "level": "must", "where": "section:method", "label": "Randomised A/B between subjects", "any": ["random", "a/b", "between"] },
+    { "id": "M2", "level": "should", "where": "document", "label": "Enrolment window from the recruitment note (18 Jan - 14 Feb 2027, 4 weeks)", "any": ["18 jan", "january 18", "14 feb", "february 14", "4 weeks", "four weeks"] },
+    { "id": "N1", "level": "must", "where": "document", "label": "Baseline 30 % week-1 retention read from the CSV", "any": ["30 ?%", "30\\.0", "0\\.30", "30 percent"] },
+    { "id": "N2", "level": "must", "where": "document", "label": "Sample size ~961 per group (1,922 total)", "any": ["96[01]", "1,?92[0-2]"] },
+    { "id": "N3", "level": "should", "where": "spans", "label": "The Data analyst used the sample-size tool", "toolSpan": "sample" },
+    { "id": "N4", "level": "must", "where": "document", "label": "Recruitment shortfall surfaced (~1,720 / ~860 per group, < 961)", "any": ["1,?720", "\\b860\\b", "shortfall", "short of", "underpowered", "not enough", "insufficient", "fall short", "falls short"] },
+    { "id": "S1", "level": "must", "where": "section:sample", "label": "Sample excludes under-18s / unverified birth year", "any": ["18", "minor", "adult", "birth year"] },
+    { "id": "S2", "level": "must", "where": "section:sample", "label": "Only research opt-in users", "any": ["opt", "help improve", "research setting", "consent"] },
+    { "id": "S3", "level": "should", "where": "section:sample", "label": "Mobile only (iOS and Android)", "any": ["ios", "android", "mobile"] },
+    { "id": "ME1", "level": "must", "where": "section:measurements", "label": "Week-1 retention = meaningful action on day 7-13 (file-only definition)", "any": ["day 7", "days 7", "7[-–to ]+13", "ret-w1"] },
+    { "id": "ME2", "level": "should", "where": "section:measurements", "label": "Secondary metrics: checklist completion or bank connection", "any": ["completion", "bank"] },
+    { "id": "A1", "level": "must", "where": "section:analysis", "label": "Alpha 0.05 and power 0.8", "all": ["0\\.05|5 ?%", "0\\.8|80 ?%|power"] },
+    { "id": "A2", "level": "should", "where": "section:analysis", "label": "Names a two-proportion test (z-test or chi-square)", "any": ["two[- ]proportion", "z[- ]test", "chi"] },
+    { "id": "E1", "level": "must", "where": "section:ethics", "label": "Event-level data deleted 90 days after study end", "any": ["90 days", "90-day", "ninety days"] },
+    { "id": "E2", "level": "must", "where": "section:ethics", "label": "Stop condition: support contacts > 25 % over control", "any": ["25 ?%", "25 percent", "support contact"] },
+    { "id": "E3", "level": "should", "where": "section:ethics", "label": "No financial contents used (amounts, payees)", "any": ["amount", "payee", "financial", "minimis", "pseudonym"] },
+    { "id": "E4", "level": "should", "where": "document", "label": "Pre-registration with the RRB before launch", "any": ["pre-?regist", "rrb", "review board"] },
+    { "id": "Q1", "level": "must", "where": "open", "label": "Open question: include web signups / build web checklist?", "any": ["web"] },
+    { "id": "F1", "level": "should", "where": "spans", "label": "Every file was read (Read <file> tool spans)", "readAllFiles": true },
+    { "id": "X1", "level": "must", "where": "document", "label": "No incentives or paid panel offered (policy R8)", "none": ["gift card", "voucher", "[$€£] ?\\d", "paid panel to (top|recruit)", "offer .{0,20}incentive"] },
+    { "id": "X2", "level": "should", "where": "document", "label": "No other retention period invented (e.g. 30/180/365 days, 1 or 2 years for raw data)", "none": ["(delete|retain|keep)[^.]{0,40}\\b(30|60|180|365) days"] },
+    { "id": "X3", "level": "should", "where": "document", "label": "No invented person names", "noPersonNames": true }
+  ]
+}

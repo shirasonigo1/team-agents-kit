@@ -1,0 +1,4 @@
+# Copy to .dev.vars for local development (`cp .dev.vars.example .dev.vars`).
+# .dev.vars is git-ignored. In production, set the same value as a Worker secret:
+#   npx wrangler secret put ACCESS_PASSCODE
+ACCESS_PASSCODE=change-me-to-a-long-random-passcode

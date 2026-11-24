@@ -1,0 +1,405 @@
+[
+  {
+    "agentName": "ux-research--PI",
+    "teamId": "ux-research",
+    "role": "PI",
+    "stats": {
+      "runs": 2,
+      "turns": 12,
+      "inputTokens": 23460,
+      "outputTokens": 3340,
+      "lastActiveAt": "2026-11-24T11:44:00.350Z"
+    },
+    "memories": [
+      {
+        "id": 4,
+        "kind": "note",
+        "text": "Re-running a design with the same brief takes about 30% fewer turns once members remember the last review.",
+        "runId": "r_labsecond_onboard02",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-24T11:44:00.350Z"
+      },
+      {
+        "id": 3,
+        "kind": "outcome",
+        "text": "Hypothesis: approved first time. H1: New users who see the onboarding checklist have higher week-1 retention than new users who don't.",
+        "runId": "r_labsecond_onboard02",
+        "teamVersion": 2,
+        "sectionId": "hypothesis",
+        "createdAt": "2026-11-24T11:41:12.600Z"
+      },
+      {
+        "id": 2,
+        "kind": "note",
+        "text": "The product and data leads want a ship / don't-ship decision rule in every experiment design.",
+        "runId": "r_labcompleted_onboard01",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-24T09:16:22.650Z"
+      },
+      {
+        "id": 1,
+        "kind": "outcome",
+        "text": "Hypothesis: approved first time. H1: New users who see the onboarding checklist have higher week-1 retention than new users who don't.",
+        "runId": "r_labcompleted_onboard01",
+        "teamVersion": 2,
+        "sectionId": "hypothesis",
+        "createdAt": "2026-11-24T09:13:12.600Z"
+      }
+    ],
+    "recentInbox": [
+      {
+        "id": 2,
+        "runId": "r_labsecond_onboard02",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 8,
+        "createdAt": "2026-11-24T11:41:12.600Z"
+      },
+      {
+        "id": 1,
+        "runId": "r_labcompleted_onboard01",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 8,
+        "createdAt": "2026-11-24T09:13:12.600Z"
+      }
+    ]
+  },
+  {
+    "agentName": "ux-research--MS",
+    "teamId": "ux-research",
+    "role": "MS",
+    "stats": {
+      "runs": 2,
+      "turns": 9,
+      "inputTokens": 20240,
+      "outputTokens": 4250,
+      "lastActiveAt": "2026-11-24T11:44:04.500Z"
+    },
+    "memories": [
+      {
+        "id": 9,
+        "kind": "lesson",
+        "text": "Stating assignment and the control in the first draft got Sample and controls approved first time; keep doing it.",
+        "runId": "r_labsecond_onboard02",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-24T11:44:04.500Z"
+      },
+      {
+        "id": 8,
+        "kind": "outcome",
+        "text": "Sample and controls: approved first time. Participants: every new sign-up on iOS and Android during the test; existing users and staff accounts are excluded.",
+        "runId": "r_labsecond_onboard02",
+        "teamVersion": 2,
+        "sectionId": "sample",
+        "createdAt": "2026-11-24T11:42:41.600Z"
+      },
+      {
+        "id": 7,
+        "kind": "outcome",
+        "text": "Method: approved first time. Design: randomised A/B test, between-subjects, 1:1 allocation at first launch.",
+        "runId": "r_labsecond_onboard02",
+        "teamVersion": 2,
+        "sectionId": "method",
+        "createdAt": "2026-11-24T11:42:12.850Z"
+      },
+      {
+        "id": 6,
+        "kind": "outcome",
+        "text": "Variables: approved first time. Independent: onboarding checklist shown (treatment) or not shown (control), set by the feature flag at first launch.",
+        "runId": "r_labsecond_onboard02",
+        "teamVersion": 2,
+        "sectionId": "variables",
+        "createdAt": "2026-11-24T11:41:43.150Z"
+      },
+      {
+        "id": 5,
+        "kind": "lesson",
+        "text": "Sample and controls: state the randomisation unit, how reinstalls are handled and the control condition in the first draft.",
+        "runId": "r_labcompleted_onboard01",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-24T09:16:26.800Z"
+      }
+    ],
+    "recentInbox": [
+      {
+        "id": 15,
+        "runId": "r_labsecond_onboard02",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 22,
+        "createdAt": "2026-11-24T11:42:41.600Z"
+      },
+      {
+        "id": 14,
+        "runId": "r_labsecond_onboard02",
+        "from": "DA",
+        "kind": "answer",
+        "text": "961 per group (1922 in total) to detect 30% → 36% at α 0.05 with 80% power, two-sided.",
+        "spanId": 20,
+        "createdAt": "2026-11-24T11:42:21.300Z"
+      },
+      {
+        "id": 13,
+        "runId": "r_labsecond_onboard02",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 17,
+        "createdAt": "2026-11-24T11:42:12.850Z"
+      },
+      {
+        "id": 12,
+        "runId": "r_labsecond_onboard02",
+        "from": "ER",
+        "kind": "answer",
+        "text": "Low risk: the control group keeps today's onboarding. Let treatment users dismiss the checklist, and don't collect anything extra.",
+        "spanId": 15,
+        "createdAt": "2026-11-24T11:41:51.450Z"
+      },
+      {
+        "id": 11,
+        "runId": "r_labsecond_onboard02",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 13,
+        "createdAt": "2026-11-24T11:41:43.150Z"
+      }
+    ]
+  },
+  {
+    "agentName": "ux-research--DA",
+    "teamId": "ux-research",
+    "role": "DA",
+    "stats": {
+      "runs": 2,
+      "turns": 10,
+      "inputTokens": 18320,
+      "outputTokens": 3880,
+      "lastActiveAt": "2026-11-24T11:44:08.950Z"
+    },
+    "memories": [
+      {
+        "id": 6,
+        "kind": "note",
+        "text": "Reuse the earlier sample-size result when the baseline and lift haven't changed.",
+        "runId": "r_labsecond_onboard02",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-24T11:44:08.950Z"
+      },
+      {
+        "id": 5,
+        "kind": "outcome",
+        "text": "Analysis plan: approved first time. Primary test: two-sided two-proportion z-test on week-1 retention, α 0.05, power 0.80.",
+        "runId": "r_labsecond_onboard02",
+        "teamVersion": 2,
+        "sectionId": "analysis",
+        "createdAt": "2026-11-24T11:43:23.100Z"
+      },
+      {
+        "id": 4,
+        "kind": "outcome",
+        "text": "Measurements: approved first time. Primary: week-1 retention (yes/no) = at least one app open on days 2–7 after sign-up, from the analytics events table, in each user's local time.",
+        "runId": "r_labsecond_onboard02",
+        "teamVersion": 2,
+        "sectionId": "measurements",
+        "createdAt": "2026-11-24T11:43:01.400Z"
+      },
+      {
+        "id": 3,
+        "kind": "note",
+        "text": "Week-1 retention is about 30%; 961 users per group detect a rise to 36% at α 0.05, power 0.8.",
+        "runId": "r_labcompleted_onboard01",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-24T09:16:31.250Z"
+      },
+      {
+        "id": 2,
+        "kind": "outcome",
+        "text": "Analysis plan: approved first time. Primary test: two-sided two-proportion z-test on week-1 retention, α 0.05, power 0.80.",
+        "runId": "r_labcompleted_onboard01",
+        "teamVersion": 2,
+        "sectionId": "analysis",
+        "createdAt": "2026-11-24T09:15:45.400Z"
+      }
+    ],
+    "recentInbox": [
+      {
+        "id": 10,
+        "runId": "r_labsecond_onboard02",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 26,
+        "createdAt": "2026-11-24T11:43:23.100Z"
+      },
+      {
+        "id": 9,
+        "runId": "r_labsecond_onboard02",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 24,
+        "createdAt": "2026-11-24T11:43:01.400Z"
+      },
+      {
+        "id": 8,
+        "runId": "r_labsecond_onboard02",
+        "from": "MS",
+        "kind": "question",
+        "text": "Question for Data analyst. how many new users per group do we need?",
+        "spanId": 18,
+        "createdAt": "2026-11-24T11:42:13.500Z"
+      },
+      {
+        "id": 7,
+        "runId": "r_labsecond_onboard02",
+        "from": "MS",
+        "kind": "question",
+        "text": "Question for Data analyst. how should week-1 retention be measured?",
+        "spanId": 10,
+        "createdAt": "2026-11-24T11:41:14.500Z"
+      },
+      {
+        "id": 6,
+        "runId": "r_labsecond_onboard02",
+        "from": "PI",
+        "kind": "assign",
+        "text": "Section tasks: Measurements, Analysis plan.",
+        "spanId": 5,
+        "createdAt": "2026-11-24T11:40:58.650Z"
+      }
+    ]
+  },
+  {
+    "agentName": "ux-research--ER",
+    "teamId": "ux-research",
+    "role": "ER",
+    "stats": {
+      "runs": 2,
+      "turns": 6,
+      "inputTokens": 9800,
+      "outputTokens": 1940,
+      "lastActiveAt": "2026-11-24T11:44:13.700Z"
+    },
+    "memories": [
+      {
+        "id": 3,
+        "kind": "outcome",
+        "text": "Risks and ethics: approved first time. Consent: covered by the app's terms for product improvement tests; no extra data is collected for the test.",
+        "runId": "r_labsecond_onboard02",
+        "teamVersion": 2,
+        "sectionId": "ethics",
+        "createdAt": "2026-11-24T11:43:44.450Z"
+      },
+      {
+        "id": 2,
+        "kind": "lesson",
+        "text": "Tie the stop condition to a guardrail metric (week-1 uninstalls) so it can be checked during the test.",
+        "runId": "r_labcompleted_onboard01",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-24T09:16:36.000Z"
+      },
+      {
+        "id": 1,
+        "kind": "outcome",
+        "text": "Risks and ethics: approved first time. Consent: covered by the app's terms for product improvement tests; no extra data is collected for the test.",
+        "runId": "r_labcompleted_onboard01",
+        "teamVersion": 2,
+        "sectionId": "ethics",
+        "createdAt": "2026-11-24T09:16:06.750Z"
+      }
+    ],
+    "recentInbox": [
+      {
+        "id": 6,
+        "runId": "r_labsecond_onboard02",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 29,
+        "createdAt": "2026-11-24T11:43:44.450Z"
+      },
+      {
+        "id": 5,
+        "runId": "r_labsecond_onboard02",
+        "from": "MS",
+        "kind": "question",
+        "text": "Question for Ethics reviewer. is it a risk to withhold the checklist from the control group?",
+        "spanId": 14,
+        "createdAt": "2026-11-24T11:41:43.800Z"
+      },
+      {
+        "id": 4,
+        "runId": "r_labsecond_onboard02",
+        "from": "PI",
+        "kind": "assign",
+        "text": "Section task: Risks and ethics.",
+        "spanId": 6,
+        "createdAt": "2026-11-24T11:40:59.200Z"
+      },
+      {
+        "id": 3,
+        "runId": "r_labcompleted_onboard01",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 31,
+        "createdAt": "2026-11-24T09:16:06.750Z"
+      },
+      {
+        "id": 2,
+        "runId": "r_labcompleted_onboard01",
+        "from": "MS",
+        "kind": "question",
+        "text": "Question for Ethics reviewer. is it a risk to withhold the checklist from the control group?",
+        "spanId": 14,
+        "createdAt": "2026-11-24T09:13:43.800Z"
+      }
+    ]
+  },
+  {
+    "agentName": "ux-research--C",
+    "teamId": "ux-research",
+    "role": "C",
+    "stats": {
+      "runs": 2,
+      "turns": 17,
+      "inputTokens": 26420,
+      "outputTokens": 2500,
+      "lastActiveAt": "2026-11-24T11:44:18.750Z"
+    },
+    "memories": [
+      {
+        "id": 2,
+        "kind": "note",
+        "text": "Sample and controls now arrives with assignment and control defined; review it like any other section.",
+        "runId": "r_labsecond_onboard02",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-24T11:44:18.750Z"
+      },
+      {
+        "id": 1,
+        "kind": "lesson",
+        "text": "Check Sample and controls for the assignment method and a defined control condition.",
+        "runId": "r_labcompleted_onboard01",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-24T09:16:41.050Z"
+      }
+    ],
+    "recentInbox": []
+  }
+]

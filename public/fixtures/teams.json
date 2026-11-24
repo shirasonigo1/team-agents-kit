@@ -1,0 +1,49 @@
+[
+  {
+    "teamId": "squad",
+    "name": "Mobile Product Squad",
+    "version": 3,
+    "versionLabel": "v3",
+    "updatedAt": "2026-11-24T08:40:00.000Z",
+    "runCount": 13,
+    "lastRunAt": "2026-11-24T09:12:00.000Z",
+    "templateId": "product-squad",
+    "outputId": "work-plan",
+    "coordinator": "PL",
+    "members": [
+      "PL",
+      "R",
+      "D",
+      "E",
+      "C"
+    ]
+  },
+  {
+    "teamId": "ux-research",
+    "name": "UX Research Team",
+    "version": 2,
+    "versionLabel": "v2",
+    "updatedAt": "2026-11-23T16:20:00.000Z",
+    "runCount": 3,
+    "lastRunAt": "2026-11-24T09:12:00.000Z",
+    "templateId": "research-lab",
+    "outputId": "lab-experiment",
+    "coordinator": "PI",
+    "members": [
+      "PI",
+      "MS",
+      "DA",
+      "ER",
+      "C"
+    ]
+  },
+  {
+    "teamId": "growth",
+    "name": "Growth squad",
+    "version": 2,
+    "versionLabel": "v2",
+    "updatedAt": "2026-11-21T09:00:00.000Z",
+    "runCount": 0,
+    "lastRunAt": null
+  }
+]

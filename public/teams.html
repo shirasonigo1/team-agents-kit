@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teams · Team Agents Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="left">
+    <a class="brand" href="/teams.html">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#18181B" stroke-width="2" aria-hidden="true"><circle cx="14" cy="6" r="3.5"/><circle cx="6" cy="21" r="3.5"/><circle cx="22" cy="21" r="3.5"/><path d="M12.3 9 7.7 18M15.7 9l4.6 9M9.5 21h9"/></svg>
+      Team Agents Kit</a>
+    <nav class="main-nav" aria-label="Main"><a href="/teams.html" aria-current="page">Teams</a><a href="/runs.html">Runs</a></nav>
+  </div>
+  <div class="right">
+    <a class="signout" href="/logout">Sign out</a>
+    <a class="btn primary" href="/new.html" id="new-btn">New run</a>
+  </div>
+</header>
+
+<main class="page narrow" style="gap:40px;padding-top:32px">
+  <section class="stack" style="gap:16px" aria-labelledby="teams-h">
+    <div class="title-row">
+      <div>
+        <h1 id="teams-h" class="title lg">Your teams</h1>
+        <p class="sub" style="margin-top:4px">Saved agent setups. Every edit makes a new version, and each run remembers the version it used.</p>
+      </div>
+      <button id="refresh" class="btn" type="button">Refresh</button>
+    </div>
+    <div id="status" role="status" class="sr-only"></div>
+    <div id="teams" class="card-grid" aria-busy="true"></div>
+  </section>
+
+  <section class="stack" style="gap:16px" aria-labelledby="tpl-h">
+    <div>
+      <h2 id="tpl-h" class="h2" style="font-size:24px">Start from a template</h2>
+      <p class="sub" style="margin-top:4px">Copy a template, then adapt its members, tools, handoff rules and guardrails into your own team. The template decides the roles and the output.</p>
+    </div>
+    <div class="card-grid" id="templates"></div>
+  </section>
+</main>
+<footer class="site-footer"><span>Team Agents Kit</span><a href="/plumbing.html">Plumbing check</a></footer>
+
+<script src="/app.js"></script>
+<script>
+"use strict";
+// Teams: the saved teams as cards, and the templates a new team can be copied from.
+let templates = null;   // Template[] (from /api/templates, or the built-in mirror if that fails)
+let openTpl = null;     // templateId whose "new team" form is open
+let createBusy = false;
+let createError = null;
+let newName = "";
+const teamCache = new Map(); // teamId -> TeamConfig (only fetched when the summary lacks members)
+
+/** An avatar that is announced (role="img" with the role name), for avatar rows with no names next to them. */
+function roleAvatar(id, size, fs) { const a = avatar(id, size, fs); a.removeAttribute("aria-hidden"); a.setAttribute("role", "img"); a.setAttribute("aria-label", roleInfo(id).name); return a; }
+
+/** One team: name, coordinator, members, output, run stats, and edit / run links. */
+function teamCard(t) {
+  const last = t.lastRunAt ? fmtRelative(t.lastRunAt) : "No runs yet";
+  // TeamSummary usually carries members/coordinator/outputId; older servers only return them on the team itself.
+  const cfg = t.members ? t : teamCache.get(t.teamId) || t;
+  const known = !!(t.members || teamCache.has(t.teamId) || t.templateId);
+  const roles = teamRoles(cfg);
+  const out = outputOf(cfg);
+  return h("article", { class: "team-card", "aria-labelledby": `t-${t.teamId}` },
+    h("div", { class: "top" },
+      h("div", { style: "min-width:0" },
+        h("h2", { id: `t-${t.teamId}` }, t.name),
+        h("div", { class: "small muted" }, `Coordinator: ${roleInfo(coordinatorOf(cfg)).name}`)),
+      h("span", { class: "vpill", title: `Latest version: ${t.versionLabel}` }, t.versionLabel || `v${t.version}`)),
+    h("div", { class: "avatars", "aria-busy": known ? null : "true" }, roles.map((id) => roleAvatar(id, 36, 13)),
+      h("span", { class: "small muted", style: "margin-left:16px" }, `${roles.length} agents`)),
+    h("dl", null,
+      h("div", null, h("dt", null, "Default output"), h("dd", null, out.name)),
+      h("div", null, h("dt", null, "Runs"), h("dd", { class: "tabular" }, fmtNumber(t.runCount || 0))),
+      h("div", null, h("dt", null, "Last run"), h("dd", { title: t.lastRunAt ? fmtDateTime(t.lastRunAt) : null }, last))),
+    h("div", { class: "btns" },
+      h("a", { class: "btn", href: appLink("/team.html", { id: t.teamId }), "aria-label": `Edit team ${t.name}` }, "Edit team"),
+      h("a", { class: "btn dark", href: appLink("/new.html", { team: t.teamId }), "aria-label": `Start a run with ${t.name}` }, "Start a run")));
+}
+
+let teamsList = [];
+/** GET /api/teams and render the cards (or the empty / error state). */
+async function load() {
+  const box = $("teams");
+  box.setAttribute("aria-busy", "true");
+  $("status").textContent = "Loading teams…";
+  box.replaceChildren(...[0, 1].map(() => h("div", { class: "skeleton", "aria-hidden": "true" })));
+  try {
+    const teams = await apiGet("/api/teams");
+    if (!Array.isArray(teams)) throw new Error("Unexpected response from /api/teams.");
+    teamsList = teams;
+    box.removeAttribute("aria-busy");
+    if (!teams.length) {
+      box.replaceChildren(h("div", { class: "card", style: "grid-column:1/-1" }, h("div", { class: "empty-state", style: "padding:24px" },
+        h("div", { class: "h2", style: "color:var(--text)" }, "No teams yet"),
+        h("p", { style: "margin:0" }, "Copy a template below to make your first team."))));
+    } else box.replaceChildren(...teams.map(teamCard));
+    $("status").textContent = `${plural(teams.length, "team")} loaded.`;
+    fillMissingMembers(teams);
+  } catch (err) {
+    box.removeAttribute("aria-busy");
+    $("status").textContent = "";
+    box.replaceChildren(h("div", { class: "card", style: "grid-column:1/-1" }, h("div", { class: "empty-state", style: "padding:24px" },
+      h("div", { class: "notice err", role: "alert", style: "text-align:left" }, icon("warn"), h("span", null, h("strong", null, "Could not load teams. "), err.message)),
+      h("button", { class: "btn", type: "button", onClick: load }, "Try again"))));
+  }
+}
+/** Older servers: TeamSummary has no members, so read each such team once to show its real roles and output. */
+async function fillMissingMembers(teams) {
+  const missing = teams.filter((t) => !t.members && !teamCache.has(t.teamId));
+  await Promise.all(missing.map(async (t) => {
+    try { const res = await apiGet(`/api/teams/${encodeURIComponent(t.teamId)}`); if (res && res.team) teamCache.set(t.teamId, res.team); }
+    catch { /* keep the template fallback */ }
+  }));
+  if (missing.length && teamsList === teams) keepFocus(() => $("teams").replaceChildren(...teams.map(teamCard)));
+}
+
+// ---------- Templates ----------
+/** The built-in template catalog in the GET /api/templates shape. */
+function localTemplates() {
+  return Object.values(TEMPLATES).map((t) => ({ ...t, roles: t.members.map((id) => ROLES[id]), sections: OUTPUTS[t.outputId].sections, outputName: OUTPUTS[t.outputId].name }));
+}
+async function loadTemplates() {
+  $("templates").replaceChildren(h("div", { class: "skeleton", "aria-hidden": "true" }));
+  try {
+    const list = await apiGet("/api/templates");
+    if (!Array.isArray(list) || !list.length || !list.every((t) => t && t.templateId && Array.isArray(t.members))) throw new Error("Unexpected response from /api/templates.");
+    templates = list;
+  } catch (err) {
+    // The template catalog is fixed in the contract, so the built-in copy is a safe fallback (e.g. an older server).
+    templates = localTemplates();
+  }
+  renderTemplates();
+}
+function tplOutputName(t) { return t.outputName || (OUTPUTS[t.outputId] || {}).name || t.outputId; }
+function tplRoles(t) { return t.description || (t.roles || t.members.map((id) => roleInfo(id))).map((r) => r.name).join(", "); }
+
+/** Template cards; the open one is a "new team" form. */
+function renderTemplates() {
+  if (!templates) return;
+  $("templates").replaceChildren(...templates.map((t) => {
+    const roles = tplRoles(t);
+    const key = t.templateId;
+    if (openTpl !== key) {
+      return h("button", { type: "button", class: "tpl-card", "data-key": `tpl-open-${key}`, "aria-expanded": "false",
+        onClick: () => { openTpl = key; createError = null; newName = ""; render(); focusName(); } },
+        h("span", { style: "display:flex;justify-content:space-between;align-items:center;gap:12px" },
+          h("span", { class: "nm" }, t.name), h("span", { class: "small", style: "font-weight:600;color:var(--accent)" }, "Use template")),
+        h("span", { class: "avatars", "aria-hidden": "true" }, t.members.map((id) => avatar(id, 26, 10))),
+        h("span", { class: "muted", style: "font-size:14px" }, roles),
+        h("span", { class: "small" }, h("span", { class: "muted" }, "Best for: "), h("strong", null, tplOutputName(t))));
+    }
+    const over = newName.length > TEXT_LIMITS.name;
+    return h("form", { class: "tpl-card", style: "border-style:solid;border-color:var(--accent);background:var(--accent-softer)", "aria-labelledby": "tpl-form-h", novalidate: true,
+      onSubmit: (e) => { e.preventDefault(); create(t); } },
+      h("span", { id: "tpl-form-h", class: "nm" }, `New team from ${t.name}`),
+      h("span", { class: "muted", style: "font-size:14px" }, roles, `. Produces a ${tplOutputName(t).toLowerCase()}. You can edit members, tools, consults and guardrails after it's created.`),
+      h("div", { class: "field" },
+        h("label", { class: "field-label", for: "team-name" }, "Team name"),
+        h("input", { id: "team-name", class: "input", type: "text", maxlength: String(TEXT_LIMITS.name), autocomplete: "off",
+          placeholder: t.outputId === "lab-experiment" ? "e.g. UX Research Team" : "e.g. Checkout squad", value: newName, "data-key": "team-name",
+          "aria-describedby": "name-meta name-err", "aria-invalid": createError ? "true" : "false",
+          onInput: (e) => { newName = e.target.value; $("name-count").textContent = `${newName.length} / ${TEXT_LIMITS.name}`; } }),
+        h("div", { class: "meta" }, h("span", { id: "name-meta" }, "Up to 60 characters."), h("span", { id: "name-count", class: over ? "over" : null }, `${newName.length} / ${TEXT_LIMITS.name}`)),
+        createError ? h("span", { id: "name-err", class: "field-error", role: "alert" }, createError) : null),
+      h("div", { class: "actions" },
+        h("button", { type: "submit", class: "btn primary", "data-key": "tpl-create", disabled: createBusy }, createBusy ? "Creating…" : "Create team"),
+        h("button", { type: "button", class: "btn", "data-key": "tpl-cancel", disabled: createBusy,
+          onClick: () => { openTpl = null; createError = null; render(); const b = document.querySelector(`[data-key="tpl-open-${key}"]`); if (b) b.focus(); } }, "Cancel")));
+  }));
+}
+function render() { keepFocus(renderTemplates); }
+function focusName() { const i = $("team-name"); if (i) i.focus(); }
+
+/** POST /api/teams from a template, then open the new team in the editor. */
+async function create(t) {
+  const name = newName.trim();
+  if (!name) { createError = "Give the team a name."; render(); focusName(); return; }
+  if (name.length > TEXT_LIMITS.name) { createError = `Use at most ${TEXT_LIMITS.name} characters.`; render(); focusName(); return; }
+  createBusy = true; createError = null; render();
+  try {
+    if (FIXTURE) { await delay(400); location.href = appLink("/team.html", { id: t.templateId === "research-lab" ? "ux-research" : "growth", created: "1" }); return; }
+    const team = await postJSON("/api/teams", { name, templateId: t.templateId });
+    if (!team || !team.teamId) throw new Error("The server did not return the new team.");
+    location.href = appLink("/team.html", { id: team.teamId, created: "1" });
+  } catch (err) {
+    createBusy = false; createError = `Could not create the team: ${err.message}`; render(); focusName();
+  }
+}
+
+$("refresh").addEventListener("click", load);
+loadTemplates();
+load();
+</script>
+</body>
+</html>

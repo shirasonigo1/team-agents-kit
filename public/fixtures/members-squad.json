@@ -1,0 +1,387 @@
+[
+  {
+    "agentName": "squad--PL",
+    "teamId": "squad",
+    "role": "PL",
+    "stats": {
+      "runs": 13,
+      "turns": 68,
+      "inputTokens": 112430,
+      "outputTokens": 16100,
+      "lastActiveAt": "2026-11-24T09:16:43.900Z"
+    },
+    "memories": [
+      {
+        "id": 4,
+        "kind": "note",
+        "text": "Owners stay as [PLACEHOLDER] names; the Critic approves them first time when every area has one.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": null,
+        "createdAt": "2026-11-24T09:16:43.900Z"
+      },
+      {
+        "id": 3,
+        "kind": "outcome",
+        "text": "Owners: approved first time. Overall: [PRODUCT OWNER].",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": "owners",
+        "createdAt": "2026-11-24T09:16:27.500Z"
+      },
+      {
+        "id": 2,
+        "kind": "outcome",
+        "text": "Goal: approved first time. Ship an offline mode beta of the field-notes app by the end of Q1.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": "goal",
+        "createdAt": "2026-11-24T09:13:19.300Z"
+      },
+      {
+        "id": 1,
+        "kind": "note",
+        "text": "The team is 4 engineers and 1 designer; plans have to fit that headcount.",
+        "runId": "r_squad_beta02",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-20T14:05:00.000Z"
+      }
+    ],
+    "recentInbox": [
+      {
+        "id": 2,
+        "runId": "r_completed_offline01",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 32,
+        "createdAt": "2026-11-24T09:16:27.500Z"
+      },
+      {
+        "id": 1,
+        "runId": "r_completed_offline01",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 8,
+        "createdAt": "2026-11-24T09:13:19.300Z"
+      }
+    ]
+  },
+  {
+    "agentName": "squad--R",
+    "teamId": "squad",
+    "role": "R",
+    "stats": {
+      "runs": 13,
+      "turns": 34,
+      "inputTokens": 57620,
+      "outputTokens": 12710,
+      "lastActiveAt": "2026-11-24T09:16:48.050Z"
+    },
+    "memories": [
+      {
+        "id": 3,
+        "kind": "note",
+        "text": "The uploaded roadmap's field research section answers most user-need questions; read it before answering.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": null,
+        "createdAt": "2026-11-24T09:16:48.050Z"
+      },
+      {
+        "id": 2,
+        "kind": "outcome",
+        "text": "Dependencies: approved first time. Choose the on-device database before the local storage work starts (the repo has no local store today).",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": "deps",
+        "createdAt": "2026-11-24T09:16:14.000Z"
+      },
+      {
+        "id": 1,
+        "kind": "note",
+        "text": "Field users go hours without signal and sync at the end of the day; losing a note is their top complaint.",
+        "runId": "r_squad_beta02",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-20T14:05:00.000Z"
+      }
+    ],
+    "recentInbox": [
+      {
+        "id": 5,
+        "runId": "r_completed_offline01",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 30,
+        "createdAt": "2026-11-24T09:16:14.000Z"
+      },
+      {
+        "id": 4,
+        "runId": "r_completed_offline01",
+        "from": "E",
+        "kind": "answer",
+        "text": "Pick an on-device database first; move to client-generated note IDs; confirm background sync permissions on both platforms.",
+        "spanId": 27,
+        "createdAt": "2026-11-24T09:15:52.050Z"
+      },
+      {
+        "id": 3,
+        "runId": "r_completed_offline01",
+        "from": "E",
+        "kind": "question",
+        "text": "Question for Researcher. what breaks offline in field conditions?",
+        "spanId": 19,
+        "createdAt": "2026-11-24T09:14:42.450Z"
+      },
+      {
+        "id": 2,
+        "runId": "r_completed_offline01",
+        "from": "D",
+        "kind": "question",
+        "text": "Question for Researcher. what do field users need with no signal?",
+        "spanId": 9,
+        "createdAt": "2026-11-24T09:13:19.950Z"
+      },
+      {
+        "id": 1,
+        "runId": "r_completed_offline01",
+        "from": "PL",
+        "kind": "assign",
+        "text": "Section task: Dependencies.",
+        "spanId": 6,
+        "createdAt": "2026-11-24T09:13:06.200Z"
+      }
+    ]
+  },
+  {
+    "agentName": "squad--D",
+    "teamId": "squad",
+    "role": "D",
+    "stats": {
+      "runs": 13,
+      "turns": 41,
+      "inputTokens": 71560,
+      "outputTokens": 19240,
+      "lastActiveAt": "2026-11-24T09:16:52.500Z"
+    },
+    "memories": [
+      {
+        "id": 4,
+        "kind": "lesson",
+        "text": "When the Engineer consult is off, base milestones on the scope section and the brief's deadline.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": null,
+        "createdAt": "2026-11-24T09:16:52.500Z"
+      },
+      {
+        "id": 3,
+        "kind": "outcome",
+        "text": "Milestones: approved first time. 1 · Local storage layer: notes and photos are saved on the device first.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": "milestones",
+        "createdAt": "2026-11-24T09:14:13.850Z"
+      },
+      {
+        "id": 2,
+        "kind": "outcome",
+        "text": "Scope and non-goals: approved first time. In scope: create, edit and delete notes offline; queue photo attachments; sync on reconnect.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": "scope",
+        "createdAt": "2026-11-24T09:13:52.550Z"
+      },
+      {
+        "id": 1,
+        "kind": "lesson",
+        "text": "Milestones: each milestone must ship something a user notices, not an internal refactor.",
+        "runId": "r_squad_beta02",
+        "teamVersion": 2,
+        "sectionId": "milestones",
+        "createdAt": "2026-11-20T14:05:00.000Z"
+      }
+    ],
+    "recentInbox": [
+      {
+        "id": 4,
+        "runId": "r_completed_offline01",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 15,
+        "createdAt": "2026-11-24T09:14:13.850Z"
+      },
+      {
+        "id": 3,
+        "runId": "r_completed_offline01",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 13,
+        "createdAt": "2026-11-24T09:13:52.550Z"
+      },
+      {
+        "id": 2,
+        "runId": "r_completed_offline01",
+        "from": "R",
+        "kind": "answer",
+        "text": "68% of sessions start with no signal and last hours offline (field-notes-roadmap.pdf). Users capture short notes and photos in bursts, then sync at the end of the day. Losing a note is the top complaint.",
+        "spanId": 11,
+        "createdAt": "2026-11-24T09:13:30.350Z"
+      },
+      {
+        "id": 1,
+        "runId": "r_completed_offline01",
+        "from": "PL",
+        "kind": "assign",
+        "text": "Section tasks: Scope and non-goals, Milestones.",
+        "spanId": 4,
+        "createdAt": "2026-11-24T09:13:05.100Z"
+      }
+    ]
+  },
+  {
+    "agentName": "squad--E",
+    "teamId": "squad",
+    "role": "E",
+    "stats": {
+      "runs": 13,
+      "turns": 49,
+      "inputTokens": 126600,
+      "outputTokens": 23870,
+      "lastActiveAt": "2026-11-24T09:16:57.250Z"
+    },
+    "memories": [
+      {
+        "id": 6,
+        "kind": "note",
+        "text": "The repo's sync uses last-write-wins and server-assigned note IDs.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": null,
+        "createdAt": "2026-11-24T09:16:57.250Z"
+      },
+      {
+        "id": 5,
+        "kind": "lesson",
+        "text": "Write a concrete mitigation next to every risk in the first draft; the Critic sends back risks without one.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": null,
+        "createdAt": "2026-11-24T09:16:57.250Z"
+      },
+      {
+        "id": 4,
+        "kind": "outcome",
+        "text": "Risks: approved after 2 rounds. Sync conflicts may overwrite edits made on two devices. Likelihood: high. Mitigation: merge per field, keep both versions when a merge fails, and pass a conflict test suite before beta.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": "risks",
+        "createdAt": "2026-11-24T09:15:39.100Z"
+      },
+      {
+        "id": 3,
+        "kind": "lesson",
+        "text": "Risks: Sync conflicts are named as the top risk but there is no mitigation, and no risk has a mitigation at all. The brief says sync must never lose a note.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": "risks",
+        "createdAt": "2026-11-24T09:15:15.100Z"
+      },
+      {
+        "id": 2,
+        "kind": "outcome",
+        "text": "Timeline: approved first time. Weeks 1–3: local storage layer and migration of existing notes.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": "timeline",
+        "createdAt": "2026-11-24T09:14:41.800Z"
+      }
+    ],
+    "recentInbox": [
+      {
+        "id": 6,
+        "runId": "r_completed_offline01",
+        "from": "R",
+        "kind": "question",
+        "text": "Question for Engineer. what must land before sync work?",
+        "spanId": 25,
+        "createdAt": "2026-11-24T09:15:39.750Z"
+      },
+      {
+        "id": 5,
+        "runId": "r_completed_offline01",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved.",
+        "spanId": 24,
+        "createdAt": "2026-11-24T09:15:39.100Z"
+      },
+      {
+        "id": 4,
+        "runId": "r_completed_offline01",
+        "from": "C",
+        "kind": "review",
+        "text": "Sent back to Engineer: Sync conflicts are named as the top risk but there is no mitigation, and no risk has a mitigation at all. The brief says sync must never lose a note.",
+        "spanId": 22,
+        "createdAt": "2026-11-24T09:15:15.100Z"
+      },
+      {
+        "id": 3,
+        "runId": "r_completed_offline01",
+        "from": "R",
+        "kind": "answer",
+        "text": "Two devices editing the same note, phones running out of storage from photos, and the OS killing background sync.",
+        "spanId": 20,
+        "createdAt": "2026-11-24T09:14:52.000Z"
+      },
+      {
+        "id": 2,
+        "runId": "r_completed_offline01",
+        "from": "C",
+        "kind": "review",
+        "text": "Approved, no changes.",
+        "spanId": 18,
+        "createdAt": "2026-11-24T09:14:41.800Z"
+      }
+    ]
+  },
+  {
+    "agentName": "squad--C",
+    "teamId": "squad",
+    "role": "C",
+    "stats": {
+      "runs": 13,
+      "turns": 101,
+      "inputTokens": 162140,
+      "outputTokens": 16740,
+      "lastActiveAt": "2026-11-24T09:17:02.300Z"
+    },
+    "memories": [
+      {
+        "id": 2,
+        "kind": "lesson",
+        "text": "For offline sync plans, the conflict risk needs a mitigation that protects every note.",
+        "runId": "r_completed_offline01",
+        "teamVersion": 3,
+        "sectionId": null,
+        "createdAt": "2026-11-24T09:17:02.300Z"
+      },
+      {
+        "id": 1,
+        "kind": "lesson",
+        "text": "Check that every risk has a mitigation, not only a likelihood.",
+        "runId": "r_squad_beta02",
+        "teamVersion": 2,
+        "sectionId": null,
+        "createdAt": "2026-11-20T14:05:00.000Z"
+      }
+    ],
+    "recentInbox": []
+  }
+]

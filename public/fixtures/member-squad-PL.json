@@ -1,0 +1,70 @@
+{
+  "agentName": "squad--PL",
+  "teamId": "squad",
+  "role": "PL",
+  "stats": {
+    "runs": 13,
+    "turns": 68,
+    "inputTokens": 112430,
+    "outputTokens": 16100,
+    "lastActiveAt": "2026-11-24T09:16:43.900Z"
+  },
+  "memories": [
+    {
+      "id": 4,
+      "kind": "note",
+      "text": "Owners stay as [PLACEHOLDER] names; the Critic approves them first time when every area has one.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": null,
+      "createdAt": "2026-11-24T09:16:43.900Z"
+    },
+    {
+      "id": 3,
+      "kind": "outcome",
+      "text": "Owners: approved first time. Overall: [PRODUCT OWNER].",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": "owners",
+      "createdAt": "2026-11-24T09:16:27.500Z"
+    },
+    {
+      "id": 2,
+      "kind": "outcome",
+      "text": "Goal: approved first time. Ship an offline mode beta of the field-notes app by the end of Q1.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": "goal",
+      "createdAt": "2026-11-24T09:13:19.300Z"
+    },
+    {
+      "id": 1,
+      "kind": "note",
+      "text": "The team is 4 engineers and 1 designer; plans have to fit that headcount.",
+      "runId": "r_squad_beta02",
+      "teamVersion": 2,
+      "sectionId": null,
+      "createdAt": "2026-11-20T14:05:00.000Z"
+    }
+  ],
+  "recentInbox": [
+    {
+      "id": 2,
+      "runId": "r_completed_offline01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 32,
+      "createdAt": "2026-11-24T09:16:27.500Z"
+    },
+    {
+      "id": 1,
+      "runId": "r_completed_offline01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 8,
+      "createdAt": "2026-11-24T09:13:19.300Z"
+    }
+  ]
+}

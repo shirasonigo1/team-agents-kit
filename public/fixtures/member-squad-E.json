@@ -1,0 +1,124 @@
+{
+  "agentName": "squad--E",
+  "teamId": "squad",
+  "role": "E",
+  "stats": {
+    "runs": 13,
+    "turns": 49,
+    "inputTokens": 126600,
+    "outputTokens": 23870,
+    "lastActiveAt": "2026-11-24T09:16:57.250Z"
+  },
+  "memories": [
+    {
+      "id": 6,
+      "kind": "note",
+      "text": "The repo's sync uses last-write-wins and server-assigned note IDs.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": null,
+      "createdAt": "2026-11-24T09:16:57.250Z"
+    },
+    {
+      "id": 5,
+      "kind": "lesson",
+      "text": "Write a concrete mitigation next to every risk in the first draft; the Critic sends back risks without one.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": null,
+      "createdAt": "2026-11-24T09:16:57.250Z"
+    },
+    {
+      "id": 4,
+      "kind": "outcome",
+      "text": "Risks: approved after 2 rounds. Sync conflicts may overwrite edits made on two devices. Likelihood: high. Mitigation: merge per field, keep both versions when a merge fails, and pass a conflict test suite before beta.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": "risks",
+      "createdAt": "2026-11-24T09:15:39.100Z"
+    },
+    {
+      "id": 3,
+      "kind": "lesson",
+      "text": "Risks: Sync conflicts are named as the top risk but there is no mitigation, and no risk has a mitigation at all. The brief says sync must never lose a note.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": "risks",
+      "createdAt": "2026-11-24T09:15:15.100Z"
+    },
+    {
+      "id": 2,
+      "kind": "outcome",
+      "text": "Timeline: approved first time. Weeks 1–3: local storage layer and migration of existing notes.",
+      "runId": "r_completed_offline01",
+      "teamVersion": 3,
+      "sectionId": "timeline",
+      "createdAt": "2026-11-24T09:14:41.800Z"
+    },
+    {
+      "id": 1,
+      "kind": "outcome",
+      "text": "Timeline: approved first time. Four phases that end at the deadline, with a test week before beta.",
+      "runId": "r_squad_beta02",
+      "teamVersion": 2,
+      "sectionId": "timeline",
+      "createdAt": "2026-11-20T14:05:00.000Z"
+    }
+  ],
+  "recentInbox": [
+    {
+      "id": 6,
+      "runId": "r_completed_offline01",
+      "from": "R",
+      "kind": "question",
+      "text": "Question for Engineer. what must land before sync work?",
+      "spanId": 25,
+      "createdAt": "2026-11-24T09:15:39.750Z"
+    },
+    {
+      "id": 5,
+      "runId": "r_completed_offline01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved.",
+      "spanId": 24,
+      "createdAt": "2026-11-24T09:15:39.100Z"
+    },
+    {
+      "id": 4,
+      "runId": "r_completed_offline01",
+      "from": "C",
+      "kind": "review",
+      "text": "Sent back to Engineer: Sync conflicts are named as the top risk but there is no mitigation, and no risk has a mitigation at all. The brief says sync must never lose a note.",
+      "spanId": 22,
+      "createdAt": "2026-11-24T09:15:15.100Z"
+    },
+    {
+      "id": 3,
+      "runId": "r_completed_offline01",
+      "from": "R",
+      "kind": "answer",
+      "text": "Two devices editing the same note, phones running out of storage from photos, and the OS killing background sync.",
+      "spanId": 20,
+      "createdAt": "2026-11-24T09:14:52.000Z"
+    },
+    {
+      "id": 2,
+      "runId": "r_completed_offline01",
+      "from": "C",
+      "kind": "review",
+      "text": "Approved, no changes.",
+      "spanId": 18,
+      "createdAt": "2026-11-24T09:14:41.800Z"
+    },
+    {
+      "id": 1,
+      "runId": "r_completed_offline01",
+      "from": "PL",
+      "kind": "assign",
+      "text": "Section tasks: Timeline, Risks.",
+      "spanId": 5,
+      "createdAt": "2026-11-24T09:13:05.650Z"
+    }
+  ]
+}
