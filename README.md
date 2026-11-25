@@ -243,4 +243,4 @@ Ideas for where this experiment could go next:
 
 ## License
 
-No license has been chosen yet. Until one is added, all rights are reserved by the author.
+Released under the [MIT License](LICENSE).

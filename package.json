@@ -1,5 +1,6 @@
 {
   "name": "team-agents-kit",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {
